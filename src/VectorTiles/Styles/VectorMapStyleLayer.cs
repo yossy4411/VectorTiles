@@ -37,8 +37,6 @@ public class VectorBackgroundStyleLayer
     : VectorMapStyleLayer
 {
     public IStyleProperty<Color>? BackgroundColor { get; init; }
-
-    public Color GetBackgroundColor(float zoom) => BackgroundColor?.GetValue(zoom) ?? DefaultColor;
 }
 
 public class VectorFillStyleLayer : VectorMapStyleLayer
@@ -60,8 +58,6 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
     }
     
     public IStyleProperty<float>? LineWidth { get; init; }
-    
-    public float GetLineWidth(float zoom) => LineWidth?.GetValue(zoom) ?? 1;
     
     /// <summary>
     /// Pattern of dashes and gaps to be used when drawing lines.

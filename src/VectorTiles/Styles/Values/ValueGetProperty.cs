@@ -7,7 +7,7 @@ public class ValueGetProperty<T> : IStyleProperty<T?>
 {
     public string? Key { get; init; }
     
-    public T? GetValue(float zoom, Dictionary<string, object?>? values = null)
+    public T? GetValue(Dictionary<string, object?>? values = null)
     {
         if (values is null || Key is null) return default;
         if (values.TryGetValue(Key, out var value) && value is T tValue)

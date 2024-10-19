@@ -13,7 +13,7 @@ public class StaticValueProperty<T> : IStyleProperty<T?>
         _value = value;
     }
 
-    public T? GetValue(float zoom, Dictionary<string, object?>? values = null)
+    public T? GetValue(Dictionary<string, object?>? values = null)
     {
         return _value;
     }

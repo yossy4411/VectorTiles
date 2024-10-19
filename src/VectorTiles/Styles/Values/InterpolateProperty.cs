@@ -4,17 +4,31 @@ namespace VectorTiles.Styles.Values;
 /// Interpolate segments
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class InterpolateProperty<T> : List<InterpolateSegment<T>>, IStyleProperty<T>
+public class InterpolateProperty<T> : List<InterpolateSegment<T>>, IStyleProperty<T?>
 {
     private readonly InterpolateType _type;
     
-    public InterpolateProperty(InterpolateType type)
+    private readonly string _key;
+    
+    public InterpolateProperty(InterpolateType type, string key = "$zoom")
     {
         _type = type;
+        _key = key;
     }
 
-    public virtual T GetValue(float zoom, Dictionary<string, object?>? values = null)
+    public virtual T? GetValue(Dictionary<string, object?>? values = null)
     {
+        if (values is null) return default;
+        var zoom = values.TryGetValue(_key, out var zoomValue)
+            ? zoomValue switch
+            {
+                int zoomI => zoomI,
+                float zoomF => zoomF,
+                double zoomD => (float)zoomD,
+                _ => 0
+            }
+            : 0;
+
         switch (_type)
         {
             case InterpolateType.Linear:

@@ -1,4 +1,4 @@
-using System.Text;
+using System.Diagnostics;
 using VectorTiles.Styles.MapboxGL;
 
 namespace VectorTiles.Test;
@@ -6,10 +6,11 @@ namespace VectorTiles.Test;
 public class Tests
 {
     [Test]
-    public async ValueTask Test1()
+    public async ValueTask StyleJson()
     {
         var text = await File.ReadAllTextAsync("basic.json"); // Read the JSON file
         var styles = VectorMapStyleGL.LoadGLJson(text);
+        
         Assert.That(styles, Is.Not.Null);
         Dictionary<string, object> values = new();
         
@@ -87,7 +88,5 @@ public class Tests
         Assert.That(layer.IsVisible(values), Is.False);
         values["vt_rdctg"] = "国道等";
         Assert.That(layer.IsVisible(values), Is.True);
-        
-        
     }
 }

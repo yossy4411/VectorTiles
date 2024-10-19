@@ -125,7 +125,7 @@ public static class VectorMapStyleGL
             case "fill":
             {
                 var fillColorToken = paintToken!["fill-color"];
-                var fillColor = ParseInterpolation(fillColorToken, Color.White);
+                var fillColor = ParseProperty(fillColorToken, Color.White);
                 return new VectorFillStyleLayer(source, vMapFilter)
                 {
                     MinZoom = minZoom,
@@ -137,9 +137,9 @@ public static class VectorMapStyleGL
             case "line":
             {
                 var lineColorToken = paintToken!["line-color"];
-                var lineColor = ParseInterpolation(lineColorToken, Color.White);
+                var lineColor = ParseProperty(lineColorToken, Color.White);
                 var lineWidthToken = paintToken["line-width"];
-                var lineWidth = ParseInterpolation(lineWidthToken, 1f);
+                var lineWidth = ParseProperty(lineWidthToken, 1f);
                 var dashToken = paintToken["line-dasharray"];
                 var dashToken1 = dashToken?[0];
                 // {"line-dasharray": ["literal", [1, 2]]} or {"line-dasharray": [1, 2]} <- What's the difference?
@@ -164,15 +164,15 @@ public static class VectorMapStyleGL
             case "symbol":
             {
                 var layoutToken = jToken["layout"];
-                var textSize = ParseInterpolation(layoutToken?["text-size"], 12f);
-                var textColor = ParseInterpolation(layoutToken?["text-color"], Color.Black);
+                var textSize = ParseProperty(layoutToken?["text-size"], 12f);
+                var textColor = ParseProperty(layoutToken?["text-color"], Color.Black);
                 var fieldToken = layoutToken?["text-field"];
                 var field = fieldToken is JArray
                     ? fieldToken[1]?.ToObject<string>()
                     : fieldToken?.ToObject<string>()?.Replace("{", "").Replace("}", "");
                 var imageToken = layoutToken?["icon-image"];
                 var iconImage = imageToken?.Type == JTokenType.String ? imageToken.ToObject<string>() : null;
-                var iconSize = ParseInterpolation(layoutToken?["icon-size"], 1f);
+                var iconSize = ParseProperty(layoutToken?["icon-size"], 1f);
                 return new VectorSymbolStyleLayer(source, vMapFilter)
                 {
                     TextField = field,
@@ -188,7 +188,7 @@ public static class VectorMapStyleGL
             case "background":
             {
                 var backgroundColorToken = paintToken!["background-color"];
-                var backgroundColor = ParseInterpolation(backgroundColorToken, Color.White);
+                var backgroundColor = ParseProperty(backgroundColorToken, Color.White);
                 return new VectorBackgroundStyleLayer
                 {
                     MinZoom = minZoom,
@@ -202,71 +202,113 @@ public static class VectorMapStyleGL
         }
     }
 
-    private static IStyleProperty<T?> ParseInterpolation<T>(JToken? tokenA, T defaultValue)
+    private static IStyleProperty<T?> ParseProperty<T>(JToken? tokenA, T defaultValue)
     {
         if (tokenA is not JObject li)
         {
-            if (tokenA is not JArray)
+            if (tokenA is not JArray array)
+            {
+                // I don't know what is the value
                 return new StaticValueProperty<T>(defaultValue);
+            }
             
-            switch (tokenA[0]?.ToObject<string>())
+            switch (array[0].ToObject<string>())
             {
                 case "get":
                 {
                     // ["get", "<key>"]
-                    var key = tokenA[1]?.ToObject<string>();
+                    var key = array[1].ToObject<string>();
                     var property = new ValueGetProperty<T>
                     {
                         Key = key
                     };
                     return property;
                 }
-            }
-            
-            return new StaticValueProperty<T>(defaultValue);
-        }
-        
-        // New interpolation format
-        // {"stops": [[0, "red"], [10, "blue"], [20, "green"]]}
-        var segments = new InterpolateProperty<T>(InterpolateType.Linear);
-        if (li["stops"] is not JArray stops) return segments;
-        foreach (var stop in stops)
-        {
-            if (stop is not JArray token) continue;
-            if (token.Count < 2) continue;
-            var zoom = token[0].ToObject<float>();
-            var value = token[1];
-            switch (value.Type)
-            {
-                case JTokenType.String:
+                case "interpolate":
                 {
-                    var seg = new InterpolateSegmentColor(zoom, ParseColor(value.ToObject<string>()));
-                    if (seg is InterpolateSegment<T> seg1)
+                    // ["interpolate", ["linear"], ["zoom"], 0, 0, 22, 1] or ["interpolate", ["linear"], ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
+                    var type = array[1][0]?.ToObject<string>() switch
                     {
-                        segments.Add(seg1);
-                    }
-
-                    break;
-                }
-                case JTokenType.Float:
-                {
-                    var seg = new InterpolateSegmentFloat(zoom, value.ToObject<float>());
-                    if (seg is InterpolateSegment<T> seg1)
+                        "linear" => InterpolateType.Linear,
+                        _ => InterpolateType.Linear
+                    };
+                    var key = GetKey(array[2]);
+                    if (key is null) return new StaticValueProperty<T>(defaultValue);
+                    var segments = new InterpolateProperty<T>(type);
+                    
+                    for (var i = 3; i < array.Count; i += 2)
                     {
-                        segments.Add(seg1);
+                        var zoom = array[i].ToObject<float>();
+                        var value = array[i + 1];
+                        var seg = ParseInterpolation<T>(value, zoom);
+                        if (seg is not null)
+                        {
+                            segments.Add(seg);
+                        }
                     }
-
-                    break;
+                    
+                    return segments;
                 }
+
                 default:
                 {
-                    Debug.WriteLine("Unknown interpolation type: " + value.Type);
-                    break;
+                    return new StaticValueProperty<T>(defaultValue);
                 }
             }
+            
+            
         }
-        return segments;
 
+        {
+            // New interpolation format
+            // {"stops": [[0, "red"], [10, "blue"], [20, "green"]]}
+            var segments = new InterpolateProperty<T>(InterpolateType.Linear);
+            if (li["stops"] is not JArray stops) return segments;
+            foreach (var stop in stops)
+            {
+                if (stop is not JArray token) continue;
+                if (token.Count < 2) continue;
+                var zoom = token[0].ToObject<float>();
+                var value = token[1];
+                var seg = ParseInterpolation<T>(value, zoom);
+                if (seg is not null)
+                {
+                    segments.Add(seg);
+                }
+            }
+
+            return segments;
+        }
+
+    }
+
+    private static InterpolateSegment<T>? ParseInterpolation<T>(JToken value, float zoom)
+    {
+        switch (value.Type)
+        {
+            case JTokenType.String:
+            {
+                var seg = new InterpolateSegmentColor(zoom, ParseColor(value.ToObject<string>()));
+                if (seg is InterpolateSegment<T> seg1)
+                {
+                    return seg1;
+                }
+
+                break;
+            }
+            case JTokenType.Float:
+            {
+                var seg = new InterpolateSegmentFloat(zoom, value.ToObject<float>());
+                if (seg is InterpolateSegment<T> seg1)
+                {
+                    return seg1;
+                }
+
+                break;
+            }
+        }
+        Debug.WriteLine("Unknown interpolation type: " + value.Type);
+        return null;
     }
 
     private static VectorMapFilter? GetFilter(JArray token)
