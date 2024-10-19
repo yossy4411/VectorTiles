@@ -125,7 +125,7 @@ public static class VectorMapStyleGL
             case "fill":
             {
                 var fillColorToken = paintToken!["fill-color"];
-                var fillColor = ParseInterpolation(fillColorToken, new InterpolateSegmentColor(0, Color.White));
+                var fillColor = ParseInterpolation(fillColorToken, Color.White);
                 return new VectorFillStyleLayer(source, vMapFilter)
                 {
                     MinZoom = minZoom,
@@ -137,9 +137,9 @@ public static class VectorMapStyleGL
             case "line":
             {
                 var lineColorToken = paintToken!["line-color"];
-                var lineColor = ParseInterpolation(lineColorToken, new InterpolateSegmentColor(0, Color.White));
+                var lineColor = ParseInterpolation(lineColorToken, Color.White);
                 var lineWidthToken = paintToken["line-width"];
-                var lineWidth = ParseInterpolation(lineWidthToken, new InterpolateSegmentFloat(0, 1));
+                var lineWidth = ParseInterpolation(lineWidthToken, 1f);
                 var dashToken = paintToken["line-dasharray"];
                 var dashToken1 = dashToken?[0];
                 // {"line-dasharray": ["literal", [1, 2]]} or {"line-dasharray": [1, 2]} <- What's the difference?
@@ -164,15 +164,15 @@ public static class VectorMapStyleGL
             case "symbol":
             {
                 var layoutToken = jToken["layout"];
-                var textSize = ParseInterpolation(layoutToken?["text-size"], new InterpolateSegmentFloat(0, 12));
-                var textColor = ParseInterpolation(layoutToken?["text-color"], new InterpolateSegmentColor(0, Color.Black));
+                var textSize = ParseInterpolation(layoutToken?["text-size"], 12f);
+                var textColor = ParseInterpolation(layoutToken?["text-color"], Color.Black);
                 var fieldToken = layoutToken?["text-field"];
                 var field = fieldToken is JArray
                     ? fieldToken[1]?.ToObject<string>()
                     : fieldToken?.ToObject<string>()?.Replace("{", "").Replace("}", "");
                 var imageToken = layoutToken?["icon-image"];
                 var iconImage = imageToken?.Type == JTokenType.String ? imageToken.ToObject<string>() : null;
-                var iconSize = ParseInterpolation(layoutToken?["icon-size"], new InterpolateSegmentFloat(0, 1));
+                var iconSize = ParseInterpolation(layoutToken?["icon-size"], 1f);
                 return new VectorSymbolStyleLayer(source, vMapFilter)
                 {
                     TextField = field,
@@ -188,7 +188,7 @@ public static class VectorMapStyleGL
             case "background":
             {
                 var backgroundColorToken = paintToken!["background-color"];
-                var backgroundColor = ParseInterpolation(backgroundColorToken, new InterpolateSegmentColor(0, Color.White));
+                var backgroundColor = ParseInterpolation(backgroundColorToken, Color.White);
                 return new VectorBackgroundStyleLayer
                 {
                     MinZoom = minZoom,
@@ -202,37 +202,33 @@ public static class VectorMapStyleGL
         }
     }
 
-    private static IStyleValues<T> ParseInterpolation<T>(JToken? tokenA, InterpolateSegment<T> defaultValue)
+    private static IStyleProperty<T?> ParseInterpolation<T>(JToken? tokenA, T defaultValue)
     {
         if (tokenA is not JObject li)
         {
             if (tokenA is not JArray)
-                return new InterpolateSegments<T>(InterpolateType.Linear)
+                return new StaticValueProperty<T>(defaultValue);
+            
+            switch (tokenA[0]?.ToObject<string>())
+            {
+                case "get":
                 {
-                    defaultValue
-                };
-            // ["get", "<key>"]
-            if (tokenA[0]?.ToObject<string>() != "get") return new InterpolateSegments<T>(InterpolateType.Linear)
-            {
-                defaultValue
-            };
-            var key = tokenA[1]?.ToObject<string>();
-            var property = new KeyProperty()
-            {
-                Key = key
-            };
-            if (property is IStyleValues<T> values)
-            {
-                return values;
+                    // ["get", "<key>"]
+                    var key = tokenA[1]?.ToObject<string>();
+                    var property = new ValueGetProperty<T>
+                    {
+                        Key = key
+                    };
+                    return property;
+                }
             }
-
-            return new InterpolateSegments<T>(InterpolateType.Linear)
-            {
-                defaultValue
-            };
+            
+            return new StaticValueProperty<T>(defaultValue);
         }
-
-        var segments = new InterpolateSegments<T>(InterpolateType.Linear);
+        
+        // New interpolation format
+        // {"stops": [[0, "red"], [10, "blue"], [20, "green"]]}
+        var segments = new InterpolateProperty<T>(InterpolateType.Linear);
         if (li["stops"] is not JArray stops) return segments;
         foreach (var stop in stops)
         {
