@@ -111,7 +111,10 @@ public static class VectorMapStyleGL
     
     private static VectorMapStyleLayer? NewLayer(JToken jToken)
     {
-        var vMapFilter = GetFilter(jToken);
+        var filterToken = jToken["filter"];
+        var vMapFilter = filterToken is JArray filterObj ? GetFilter(filterObj) : null;
+
+
         var source = jToken["source-layer"]?.ToObject<string>()!;
         var paintToken = jToken["paint"];
         var minZoom = jToken["minzoom"]?.ToObject<int>() ?? 0;
@@ -270,43 +273,97 @@ public static class VectorMapStyleGL
 
     }
 
-    private static VectorMapFilter? GetFilter(JToken jToken)
+    private static VectorMapFilter? GetFilter(JArray token)
     {
-        if (jToken["filter"] is not JArray token) return null;
-        if (token.Count < 2) return null;
-        
         // new filter
         if (token[1] is not JArray)
         {
             return GetOneFilter(token);
         }
+        var not = token[0].ToObject<string>() == "!";
         
         // old filter
-        var first = token[0].ToObject<string>();
-        if (first == "step") return null; // not supported
-        if ( first != "all" && first != "any" && first != "step")
+        var first = not ? token[1][0]!.ToObject<string>() : token[0].ToObject<string>();
+        
+        if (first is not ("all" or "any" or "none" or "step"))
             return GetOneFilter(token);
-
-        return null; // implement later
-        // 複数のフィルタ
-        List<VectorMapFilter> filterList = new();
-        for (var i = 1; i < token.Count; i++)
+        
+        // Handling !all
+        
+        if (not)
         {
-            var token1 = (JArray)token[i];
-            var filter = GetOneFilter(token1);
-            if (filter is not null)
+            token = (JArray)token[1];
+            if (first == "all") first = "none";
+        }
+        
+        switch (first)
+        {
+            case "all" or "any" or "none":
             {
-                filterList.Add(filter);
+                // all, any
+                List<VectorMapFilter> filterList = new();
+                for (var i = 1; i < token.Count; i++)
+                {
+                    var token1 = (JArray)token[i];
+                    var filter = GetFilter(token1);
+                    if (filter is not null)
+                    {
+                        filterList.Add(filter);
+                    }
+                }
+
+                if (filterList.Count == 0) return _ => false;
+                
+                return first switch
+                {
+                    "all" => dictionary => filterList.All(x => x(dictionary)),  // All was true, return true.
+                    "any" => dictionary => filterList.Any(x => x(dictionary)),  // Any was true, return true.
+                    "none" => dictionary => filterList.All(x => !x(dictionary)), // All was false, return true.
+                    _ => null
+                };
+            }
+            case "step":
+            {
+                // ["step", ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
+                List<VectorMapFilter> filterList = new();
+                List<int> stops = new();
+                var defaultFilter = GetFilter((JArray)token[2])!;
+                for (var i = 3; i < token.Count; i+=2)
+                {
+                    var filter = GetFilter((JArray)token[i + 1]);
+                    if (filter is null) continue;
+                    filterList.Add(filter);
+                    var stop = token[i].ToObject<int>();
+                    stops.Add(stop);
+                }
+                
+                var key = GetKey(token[1]);
+                if (key is null) return null;
+
+                return dictionary =>
+                {
+                    // ["step", ["get", "zoom"], <filter1>, 5, <filter2>, 10, <filter3>, 15, <filter4>]
+                    // 0-5: filter1, 5-10: filter2, 10-15: filter3, 15-: filter4
+                    if (dictionary is null || !dictionary.TryGetValue(key, out var v)) return false;
+                    if (v is not int intValue) return false;
+                    if (intValue < stops[0]) return defaultFilter(dictionary);
+                    
+                    if (stops.Count == 1) return filterList[0](dictionary);
+                    // Range check
+                    for (var i = 0; i < stops.Count - 1; i++)
+                    {
+                        if (intValue >= stops[i] && intValue < stops[i + 1])
+                        {
+                            return filterList[i](dictionary);
+                        }
+                    }
+                    // exceeded the last stop, return the last filter
+                    return filterList[^1](dictionary);
+                };
             }
         }
 
-        if (filterList.Count == 0) return _ => false;
-        return first switch
-        {
-            "all" => dictionary => filterList.All(x => x(dictionary)),
-            "any" => dictionary => filterList.Any(x => x(dictionary)),
-            _ => null
-        };
+        return null;
     }
 
     private static VectorMapFilter? GetOneFilter(JArray token)
@@ -314,21 +371,13 @@ public static class VectorMapStyleGL
         var not = (token[0].Type == JTokenType.String ? token[0].ToObject<string>() : null) == "!";
         if (not)
             token = (JArray)token[1];
-        var jToken = token[1];
-        var key = jToken is JArray keyToken ?
-            keyToken.Count > 1 ? 
-                keyToken[1].ToObject<string>()
-                : keyToken[0].ToObject<string>() switch
-                {
-                    "geometry-type" => "$type",
-                    _ => null
-                }
-            : jToken.ToObject<string>();
+        var keyToken = token[1];
+        var key = GetKey(keyToken);
         if (key is null) return null;
         var type = token[0].ToObject<string>();
         if (not)
         {
-            key = key switch
+            type = type switch
             {
                 "has" => "!has",
                 "!has" => "has",
@@ -354,14 +403,12 @@ public static class VectorMapStyleGL
             }
             case "in":
             {
-                var value = token[2];
-                var value0 = value[0];
-                var values = value0?.Type is JTokenType.String && value0.ToObject<string>() == "literal" ? token[2][1]!.Select(ParseValue) : token.Skip(2).Select(ParseValue);
+                var values = InFilter(token);
                 return dictionary => dictionary is not null && dictionary.TryGetValue(key, out var v) && values.Any(x => Equal(x, v));
             }
             case "!in":
             {
-                var values = token[2][0]?.Type is JTokenType.String ? token[2].Skip(1).Select(ParseValue) : token.Skip(2).Select(ParseValue);
+                var values = InFilter(token);
                 return dictionary => dictionary is null || dictionary.TryGetValue(key, out var v) && values.All(x => !Equal(x, v));
             }
             case "has":
@@ -385,6 +432,49 @@ public static class VectorMapStyleGL
         }
 
         return null;
+    }
+
+    private static string? GetKey(JToken jToken)
+    {
+        var key = jToken is JArray keyToken ?
+            keyToken.Count > 1 ? 
+                keyToken[1].ToObject<string>() // ["get", "<key>"]
+                : keyToken[0].ToObject<string>() switch
+                {
+                    "geometry-type" => "$type",
+                    "zoom" => "$zoom",
+                    _ => null
+                } // example: ["$type"] (new), ["geometry-type"] (old), ["zoom"] (old)
+            : jToken.ToObject<string>();
+        return key;
+    }
+
+    private static IEnumerable<(object?, int)> InFilter(JArray token)
+    {
+        var value = token[2];
+                
+        IEnumerable<(object?, int)> values;
+        if (value is JArray array)
+        {
+            var first = array[0];
+            if (first.Type == JTokenType.String && first.ToObject<string>() == "literal")
+            {
+                // ["in", ["get", "vt_code"], ["literal", [5101, 5103]]]
+                values = array[1].Select(ParseValue);
+            }
+            else
+            {
+                // ["in", ["get", "vt_code"], [5322, ...]]
+                values = array.Select(ParseValue);
+            }
+        }
+        else
+        {
+            // ["in", ["get", "vt_code"], 5322, ...]
+            values = token.Skip(2).Select(ParseValue);
+        }
+
+        return values;
     }
 
     /// <summary>
