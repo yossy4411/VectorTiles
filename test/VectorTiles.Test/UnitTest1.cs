@@ -5,13 +5,6 @@ namespace VectorTiles.Test;
 
 public class Tests
 {
-    private HttpClient _client;
-    [SetUp]
-    public void Setup()
-    {
-        _client = new HttpClient();
-    }
-
     [Test]
     public async ValueTask Test1()
     {
@@ -49,8 +42,14 @@ public class Tests
         Assert.That(layer.IsVisible(values), Is.False);
         
         // Comparator filter check
-        // ["=>", ["get", "vt_code"], 5302]
-        // But it is not found in the JSON file, skipping this test.
+        // [">=", ["get", "vt_lvorder"], 4]
+        layer = styles.Layers.First(x => x.Id == "建築物の外周線4");
+        values["vt_lvorder"] = 4;
+        Assert.That(layer.IsVisible(values), Is.True);
+        values["vt_lvorder"] = 3;
+        Assert.That(layer.IsVisible(values), Is.False);
+        values["vt_lvorder"] = 5;
+        Assert.That(layer.IsVisible(values), Is.True);
         
         // All filter check
         // ["all", ["!", ["in", ["get", "vt_railstate"], ["literal", ["トンネル", "雪覆い", "地下", "橋・高架"]]]], ["==", ["get", "vt_lvorder"], 0]]
@@ -65,12 +64,30 @@ public class Tests
         Assert.That(layer.IsVisible(values), Is.False);
         
         // Any filter check
+        // ["any", ["==", ["get", "vt_lvorder"], 0], ["==", ["get", "vt_lvorder"], 1]]
+        // But it is not found in the JSON file, skipping this test.
         
-    }
-    
-    [TearDown]
-    public void TearDown()
-    {
-        _client.Dispose();
+        // None filter check
+        // ["none", ["==", ["get", "vt_lvorder"], 0], ["==", ["get", "vt_lvorder"], 1]]
+        // But it is not found in the JSON file, skipping this test.
+        
+        // Step filter check
+        // ["step", ["zoom"],
+        //  ["all", ["==", ["get", "vt_lvorder"], 2], ["!", ["in", ["get", "vt_code"], ["literal", [2703, 2704, ...]], ["!", ["all", ["in", ["get", "vt_rdctg"], ["literal", ["市区町村道等", ...]]], ...]]],
+        //  14, ["all", ["==", ["get", "vt_lvorder"], 2], ["!", ["in", ["get", "vt_code"], ["literal", [2703, 2704, ...]]]],
+        layer = styles.Layers.First(x => x.Id == "道路中心線ククリ2");
+        values.Clear();
+        values["$zoom"] = 14;
+        values["vt_lvorder"] = 2;
+        values["vt_code"] = 2701;
+        Assert.That(layer.IsVisible(values), Is.True);
+        values["$zoom"] = 11;
+        Assert.That(layer.IsVisible(values), Is.True);
+        values["vt_rdctg"] = "市区町村道等";
+        Assert.That(layer.IsVisible(values), Is.False);
+        values["vt_rdctg"] = "国道等";
+        Assert.That(layer.IsVisible(values), Is.True);
+        
+        
     }
 }
