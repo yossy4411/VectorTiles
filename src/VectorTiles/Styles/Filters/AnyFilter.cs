@@ -2,9 +2,9 @@ namespace VectorTiles.Styles.Filters;
 
 public class AnyFilter : IStyleFilter
 {
-    public IEnumerable<IStyleFilter> Filters { get; }
+    public List<IStyleFilter> Filters { get; }
     
-    public AnyFilter(IEnumerable<IStyleFilter> filters)
+    public AnyFilter(List<IStyleFilter> filters)
     {
         Filters = filters;
     }

@@ -444,11 +444,11 @@ public static class VectorMapStyleGL
                 var values = InFilter(token, out var type);
                 return type switch
                 {
-                    1 => new InFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!)),
-                    2 => new InFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!)),
-                    3 => new InFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!)),
+                    1 => new InFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!).ToList()),
+                    2 => new InFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!).ToList()),
+                    3 => new InFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!).ToList()),
                     4 => new InFilter<float>(key, values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
-                            (int)o.Item1! : (float)o.Item1!)),
+                            (int)o.Item1! : (float)o.Item1!).ToList()),
                     _ => null
                 };
             }
@@ -457,11 +457,11 @@ public static class VectorMapStyleGL
                 var values = InFilter(token, out var type);
                 return type switch
                 {
-                    1 => new NotInFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!)),
-                    2 => new NotInFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!)),
-                    3 => new NotInFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!)),
+                    1 => new NotInFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!).ToList()),
+                    2 => new NotInFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!).ToList()),
+                    3 => new NotInFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!).ToList()),
                     4 => new NotInFilter<float>(key, values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
-                        (int)o.Item1! : (float)o.Item1!)),
+                        (int)o.Item1! : (float)o.Item1!).ToList()),
                     _ => null
                 };
             }

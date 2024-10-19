@@ -1,8 +1,8 @@
 namespace VectorTiles.Styles.Filters;
 
-public class InFilter<T> : IStyleValueFilter<IEnumerable<T>>
+public class InFilter<T> : IStyleValueFilter<List<T>>
 {
-    public InFilter(string key, IEnumerable<T> values)
+    public InFilter(string key, List<T> values)
     {
         Key = key;
         Value = values;
@@ -21,12 +21,12 @@ public class InFilter<T> : IStyleValueFilter<IEnumerable<T>>
     }
 
     public string Key { get; init; }
-    public IEnumerable<T> Value { get; init; }
+    public List<T> Value { get; init; }
 }
 
-public class NotInFilter<T> : IStyleValueFilter<IEnumerable<T>>
+public class NotInFilter<T> : IStyleValueFilter<List<T>>
 {
-    public NotInFilter(string key, IEnumerable<T> values)
+    public NotInFilter(string key, List<T> values)
     {
         Key = key;
         Value = values;
@@ -45,5 +45,5 @@ public class NotInFilter<T> : IStyleValueFilter<IEnumerable<T>>
     }
 
     public string Key { get; init; }
-    public IEnumerable<T> Value { get; init; }
+    public List<T> Value { get; init; }
 }
