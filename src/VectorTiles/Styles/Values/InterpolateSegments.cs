@@ -1,6 +1,10 @@
 namespace VectorTiles.Styles.Values;
 
-public class InterpolateSegments<T> : List<InterpolateSegment<T>>
+/// <summary>
+/// Interpolate segments
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class InterpolateSegments<T> : List<InterpolateSegment<T>>, IStyleValues<T>
 {
     public InterpolateType Type { get; }
     
@@ -8,8 +12,8 @@ public class InterpolateSegments<T> : List<InterpolateSegment<T>>
     {
         Type = type;
     }
-    
-    public T Interpolate(float zoom)
+
+    public virtual T GetValue(float zoom, Dictionary<string, object?>? values = null)
     {
         switch (Type)
         {
@@ -36,4 +40,15 @@ public enum InterpolateType
 {
     Linear,
     // todo: Add more types
+}
+
+public class KeyProperty : IStyleValues<object?>
+{
+    public string? Key { get; set; }
+    
+    public object? GetValue(float zoom, Dictionary<string, object?>? values = null)
+    {
+        if (values is null || Key is null) return null;
+        return values.GetValueOrDefault(Key);
+    }
 }
