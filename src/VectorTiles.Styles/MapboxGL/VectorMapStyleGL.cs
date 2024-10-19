@@ -225,6 +225,13 @@ public static class VectorMapStyleGL
                     };
                     return property;
                 }
+                case "%":
+                {
+                    // ["%", ["get", "vt_code"], 10]
+                    var key = ParseProperty(array[1], 0f);
+                    var value = ParseProperty(array[2], 0f);
+                    return new ModuloProperty(key, value) as IStyleProperty<T?> ?? new StaticValueProperty<T>(defaultValue);
+                }
                 case "interpolate":
                 {
                     // ["interpolate", ["linear"], ["zoom"], 0, 0, 22, 1] or ["interpolate", ["linear"], ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
