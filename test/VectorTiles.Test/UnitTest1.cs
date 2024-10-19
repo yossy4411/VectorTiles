@@ -12,7 +12,7 @@ public class Tests
         var styles = VectorMapStyleGL.LoadGLJson(text);
         
         Assert.That(styles, Is.Not.Null);
-        Dictionary<string, object> values = new();
+        Dictionary<string, object?> values = new();
         
         // Equal filter check
         // ["==", ["get", "vt_code"], 5322]
@@ -78,11 +78,11 @@ public class Tests
         //  14, ["all", ["==", ["get", "vt_lvorder"], 2], ["!", ["in", ["get", "vt_code"], ["literal", [2703, 2704, ...]]]],
         layer = styles.Layers.First(x => x.Id == "道路中心線ククリ2");
         values.Clear();
-        values["$zoom"] = 14;
+        values["$zoom"] = 14f;
         values["vt_lvorder"] = 2;
         values["vt_code"] = 2701;
         Assert.That(layer.IsVisible(values), Is.True);
-        values["$zoom"] = 11;
+        values["$zoom"] = 11f;
         Assert.That(layer.IsVisible(values), Is.True);
         values["vt_rdctg"] = "市区町村道等";
         Assert.That(layer.IsVisible(values), Is.False);

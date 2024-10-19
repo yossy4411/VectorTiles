@@ -1,9 +1,9 @@
 using System.Drawing;
+using VectorTiles.Styles.Filters;
 using VectorTiles.Styles.Values;
 
 namespace VectorTiles.Styles;
 
-public delegate bool VectorMapFilter(Dictionary<string, object>? values);
 
 /// <summary>
 /// Layer for drawing vector map
@@ -14,19 +14,19 @@ public abstract class VectorMapStyleLayer
     public int MinZoom { get; init; } = 0;
     public int MaxZoom { get; init; } = 22;
     public string? Id { get; init; }
-    private readonly VectorMapFilter? _filter;
+    private readonly IStyleFilter? _filter;
 
     protected static readonly Color DefaultColor = Color.White;
     
-    protected VectorMapStyleLayer(string? source = null, VectorMapFilter? filter = null)
+    protected VectorMapStyleLayer(string? source = null, IStyleFilter? filter = null)
     {
         Source = source;
         _filter = filter;
     }
     
-    public bool IsVisible(Dictionary<string, object> values)
+    public bool IsVisible(Dictionary<string, object?> values)
     {
-        return _filter?.Invoke(values) ?? true;
+        return _filter?.Filter(values) ?? true;
     }
 }
 
@@ -41,7 +41,7 @@ public class VectorBackgroundStyleLayer
 
 public class VectorFillStyleLayer : VectorMapStyleLayer
 {
-    public VectorFillStyleLayer(string? source = null, VectorMapFilter? filter = null) : base(source, filter)
+    public VectorFillStyleLayer(string? source = null, IStyleFilter? filter = null) : base(source, filter)
     {
     }
     
@@ -53,7 +53,7 @@ public class VectorFillStyleLayer : VectorMapStyleLayer
 /// </summary>
 public class VectorLineStyleLayer : VectorMapStyleLayer
 {
-    public VectorLineStyleLayer(string? source = null, VectorMapFilter? filter = null) : base(source, filter)
+    public VectorLineStyleLayer(string? source = null, IStyleFilter? filter = null) : base(source, filter)
     {
     }
     
@@ -76,7 +76,7 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
 /// </summary>
 public class VectorSymbolStyleLayer : VectorMapStyleLayer
 {
-    public VectorSymbolStyleLayer(string? source = null, VectorMapFilter? filter = null) : base(source, filter)
+    public VectorSymbolStyleLayer(string? source = null, IStyleFilter? filter = null) : base(source, filter)
     {
     }
     

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Drawing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using VectorTiles.Styles.Filters;
 using VectorTiles.Styles.Values;
 
 namespace VectorTiles.Styles.MapboxGL;
@@ -311,7 +312,7 @@ public static class VectorMapStyleGL
         return null;
     }
 
-    private static VectorMapFilter? GetFilter(JArray token)
+    private static IStyleFilter? GetFilter(JArray token)
     {
         // new filter
         if (token[1] is not JArray)
@@ -339,7 +340,7 @@ public static class VectorMapStyleGL
             case "all" or "any" or "none":
             {
                 // all, any
-                List<VectorMapFilter> filterList = new();
+                List<IStyleFilter> filterList = new();
                 for (var i = 1; i < token.Count; i++)
                 {
                     var token1 = (JArray)token[i];
@@ -350,61 +351,42 @@ public static class VectorMapStyleGL
                     }
                 }
 
-                if (filterList.Count == 0) return _ => false;
+                if (filterList.Count == 0) return FalseFilter.Instance;
                 
                 return first switch
                 {
-                    "all" => dictionary => filterList.All(x => x(dictionary)),  // All was true, return true.
-                    "any" => dictionary => filterList.Any(x => x(dictionary)),  // Any was true, return true.
-                    "none" => dictionary => filterList.All(x => !x(dictionary)), // All was false, return true.
+                    "all" => new AllFilter(filterList),  // All was true, return true.
+                    "any" => new AnyFilter(filterList),  // Any was true, return true.
+                    "none" => new NoneFilter(filterList), // All was false, return true.
                     _ => null
                 };
             }
             case "step":
             {
                 // ["step", ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
-                List<VectorMapFilter> filterList = new();
-                List<int> stops = new();
-                var defaultFilter = GetFilter((JArray)token[2])!;
+                List<IStyleFilter> filterList = new();
+                List<float> stops = new();
+                filterList.Add(GetFilter((JArray)token[2])!);
                 for (var i = 3; i < token.Count; i+=2)
                 {
                     var filter = GetFilter((JArray)token[i + 1]);
                     if (filter is null) continue;
                     filterList.Add(filter);
-                    var stop = token[i].ToObject<int>();
+                    var stop = token[i].ToObject<float>();
                     stops.Add(stop);
                 }
                 
                 var key = GetKey(token[1]);
                 if (key is null) return null;
 
-                return dictionary =>
-                {
-                    // ["step", ["get", "zoom"], <filter1>, 5, <filter2>, 10, <filter3>, 15, <filter4>]
-                    // 0-5: filter1, 5-10: filter2, 10-15: filter3, 15-: filter4
-                    if (dictionary is null || !dictionary.TryGetValue(key, out var v)) return false;
-                    if (v is not int intValue) return false;
-                    if (intValue < stops[0]) return defaultFilter(dictionary);
-                    
-                    if (stops.Count == 1) return filterList[0](dictionary);
-                    // Range check
-                    for (var i = 0; i < stops.Count - 1; i++)
-                    {
-                        if (intValue >= stops[i] && intValue < stops[i + 1])
-                        {
-                            return filterList[i](dictionary);
-                        }
-                    }
-                    // exceeded the last stop, return the last filter
-                    return filterList[^1](dictionary);
-                };
+                return new StepFilter(filterList, stops, key);
             }
         }
 
         return null;
     }
 
-    private static VectorMapFilter? GetOneFilter(JArray token)
+    private static IStyleFilter? GetOneFilter(JArray token)
     {
         var not = (token[0].Type == JTokenType.String ? token[0].ToObject<string>() : null) == "!";
         if (not)
@@ -412,10 +394,10 @@ public static class VectorMapStyleGL
         var keyToken = token[1];
         var key = GetKey(keyToken);
         if (key is null) return null;
-        var type = token[0].ToObject<string>();
+        var filterType = token[0].ToObject<string>();
         if (not)
         {
-            type = type switch
+            filterType = filterType switch
             {
                 "has" => "!has",
                 "!has" => "has",
@@ -427,45 +409,117 @@ public static class VectorMapStyleGL
             }; // invert
         }
         
-        switch (type)
+        switch (filterType)
         {
             case "==":
             {
-                var value = ParseValue(token[2]);
-                return dictionary => dictionary is not null && dictionary.TryGetValue(key, out var v) && Equal(value, v);
+                var (value, type) = ParseValue(token[2]);
+                
+                if (value is null) return null;
+                return type switch
+                {
+                    1 => new EqualFilter<string>(key, (string)value),
+                    2 => new EqualFilter<bool>(key, (bool)value),
+                    3 => new EqualFilter<int>(key, (int)value),
+                    4 => new EqualFilter<float>(key, (float)value),
+                    _ => null
+                };
             }
             case "!=":
             {
-                var value = ParseValue(token[2]);
-                return dictionary => dictionary is not null && dictionary.TryGetValue(key, out var v) && !Equal(value, v);
+                var (value, type) = ParseValue(token[2]);
+                
+                if (value is null) return null;
+                return type switch
+                {
+                    1 => new NotEqualFilter<string>(key, (string)value),
+                    2 => new NotEqualFilter<bool>(key, (bool)value),
+                    3 => new NotEqualFilter<int>(key, (int)value),
+                    4 => new NotEqualFilter<float>(key, (float)value),
+                    _ => null
+                };
             }
             case "in":
             {
-                var values = InFilter(token);
-                return dictionary => dictionary is not null && dictionary.TryGetValue(key, out var v) && values.Any(x => Equal(x, v));
+                var values = InFilter(token, out var type);
+                return type switch
+                {
+                    1 => new InFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!)),
+                    2 => new InFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!)),
+                    3 => new InFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!)),
+                    4 => new InFilter<float>(key, values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
+                            (int)o.Item1! : (float)o.Item1!)),
+                    _ => null
+                };
             }
             case "!in":
             {
-                var values = InFilter(token);
-                return dictionary => dictionary is null || dictionary.TryGetValue(key, out var v) && values.All(x => !Equal(x, v));
+                var values = InFilter(token, out var type);
+                return type switch
+                {
+                    1 => new NotInFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!)),
+                    2 => new NotInFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!)),
+                    3 => new NotInFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!)),
+                    4 => new NotInFilter<float>(key, values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
+                        (int)o.Item1! : (float)o.Item1!)),
+                    _ => null
+                };
             }
             case "has":
             {
-                return dictionary => dictionary is not null && dictionary.ContainsKey(key);
+                return new HasFilter(key);
             }
             case "!has":
             {
-                return dictionary => dictionary is null || !dictionary.ContainsKey(key);
+                return new NotHasFilter(key);
             }
             case ">":
             {
-                var value = ParseValue(token[2]);
-                return dictionary => dictionary is not null && dictionary.TryGetValue(key, out var v) && Compare(v, value.Item1!) > 0;
+                var (value, type) = ParseValue(token[2]);
+                if (value is null) return null;
+                return type switch
+                {
+                    1 => new BiggerFilter<string>(key, (string)value),
+                    3 => new BiggerFilter<int>(key, (int)value),
+                    4 => new BiggerFilter<float>(key, (float)value),
+                    _ => null
+                };
             }
             case ">=":
             {
-                var value = ParseValue(token[2]);
-                return dictionary => dictionary is not null && dictionary.TryGetValue(key, out var v) && Compare(v, value.Item1!) >= 0;
+                var (value, type) = ParseValue(token[2]);
+                if (value is null) return null;
+                return type switch
+                {
+                    1 => new BiggerOrEqualFilter<string>(key, (string)value),
+                    3 => new BiggerOrEqualFilter<int>(key, (int)value),
+                    4 => new BiggerOrEqualFilter<float>(key, (float)value),
+                    _ => null
+                };
+            }
+            case "<":
+            {
+                var (value, type) = ParseValue(token[2]);
+                if (value is null) return null;
+                return type switch
+                {
+                    1 => new LesserFilter<string>(key, (string)value),
+                    3 => new LesserFilter<int>(key, (int)value),
+                    4 => new LesserFilter<float>(key, (float)value),
+                    _ => null
+                };
+            }
+            case "<=":
+            {
+                var (value, type) = ParseValue(token[2]);
+                if (value is null) return null;
+                return type switch
+                {
+                    1 => new LesserOrEqualFilter<string>(key, (string)value),
+                    3 => new LesserOrEqualFilter<int>(key, (int)value),
+                    4 => new LesserOrEqualFilter<float>(key, (float)value),
+                    _ => null
+                };
             }
         }
 
@@ -487,10 +541,9 @@ public static class VectorMapStyleGL
         return key;
     }
 
-    private static IEnumerable<(object?, int)> InFilter(JArray token)
+    private static (object?, int)[] InFilter(JArray token, out int type)
     {
         var value = token[2];
-                
         IEnumerable<(object?, int)> values;
         if (value is JArray array)
         {
@@ -512,7 +565,9 @@ public static class VectorMapStyleGL
             values = token.Skip(2).Select(ParseValue);
         }
 
-        return values;
+        var valueTuples = values.ToArray();
+        type = valueTuples.Max(x => x.Item2);
+        return valueTuples;
     }
 
     /// <summary>
@@ -525,38 +580,10 @@ public static class VectorMapStyleGL
         return token.Type switch
         {
             JTokenType.String => (token.ToObject<string>(), 1), // 文字列
-            JTokenType.Integer => (token.ToObject<int>(), 2), // 整数
-            JTokenType.Float => (token.ToObject<float>(), 3), // 浮動小数点数
-            JTokenType.Boolean => (token.ToObject<bool>(), 4), // 真偽値
+            JTokenType.Boolean => (token.ToObject<bool>(), 2), // 真偽値
+            JTokenType.Integer => (token.ToObject<int>(), 3), // 整数
+            JTokenType.Float => (token.ToObject<float>(), 4), // 浮動小数点数
             _ => (null, 0)
         };
     }
-    
-    private static bool Equal((object?, int) value, object target)
-    {
-        return value.Item2 switch
-        {
-            1 => target is string s && s == (string?)value.Item1,
-            2 => target is long l && l == (int)value.Item1! || target is int i && i == (int)value.Item1!,
-            3 => target is float f && Math.Abs(f - (float)value.Item1!) < 0.001f ||
-                 target is double d && Math.Abs(d - (float)value.Item1!) < 0.001f,
-            4 => target is bool b && b == (bool)value.Item1!,
-            _ => false
-        };
-    }
-    
-    private static int Compare(object target, object value)
-    {
-        return target switch
-        {
-            string s => string.CompareOrdinal(s, (string)value),
-            long l => l.CompareTo(value),
-            int i => i.CompareTo(value),
-            float f => f.CompareTo(value),
-            double d => d.CompareTo(value),
-            bool b => b.CompareTo(value),
-            _ => 0
-        };
-    }
-    
 }
