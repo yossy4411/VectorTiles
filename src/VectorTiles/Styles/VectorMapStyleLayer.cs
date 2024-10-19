@@ -3,7 +3,7 @@ using VectorTiles.Styles.Values;
 
 namespace VectorTiles.Styles;
 
-public delegate bool VectorMapFilter(Dictionary<string, object> values);
+public delegate bool VectorMapFilter(Dictionary<string, object>? values);
 
 /// <summary>
 /// Layer for drawing vector map
@@ -14,9 +14,9 @@ public abstract class VectorMapStyleLayer
     public int MinZoom { get; init; } = 0;
     public int MaxZoom { get; init; } = 22;
     public string? Id { get; init; }
-    private VectorMapFilter? _filter;
+    private readonly VectorMapFilter? _filter;
 
-    public static readonly Color DefaultColor = Color.White;
+    protected static readonly Color DefaultColor = Color.White;
     
     protected VectorMapStyleLayer(string? source = null, VectorMapFilter? filter = null)
     {
@@ -36,9 +36,9 @@ public abstract class VectorMapStyleLayer
 public class VectorBackgroundStyleLayer
     : VectorMapStyleLayer
 {
-    public InterpolateSegments<Color>? BackgroundColor { get; init; }
+    public IStyleValues<Color>? BackgroundColor { get; init; }
 
-    public Color GetBackgroundColor(float zoom) => BackgroundColor?.Interpolate(zoom) ?? DefaultColor;
+    public Color GetBackgroundColor(float zoom) => BackgroundColor?.GetValue(zoom) ?? DefaultColor;
 }
 
 public class VectorFillStyleLayer : VectorMapStyleLayer
@@ -47,9 +47,7 @@ public class VectorFillStyleLayer : VectorMapStyleLayer
     {
     }
     
-    public InterpolateSegments<Color>? FillColor { get; init; }
-    
-    public Color GetFillColor(float zoom) => FillColor?.Interpolate(zoom) ?? DefaultColor;
+    public IStyleValues<Color>? FillColor { get; init; }
 }
 
 /// <summary>
@@ -61,9 +59,9 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
     {
     }
     
-    public InterpolateSegments<float>? LineWidth { get; init; }
+    public IStyleValues<float>? LineWidth { get; init; }
     
-    public float GetLineWidth(float zoom) => LineWidth?.Interpolate(zoom) ?? 1;
+    public float GetLineWidth(float zoom) => LineWidth?.GetValue(zoom) ?? 1;
     
     /// <summary>
     /// Pattern of dashes and gaps to be used when drawing lines.
@@ -74,43 +72,33 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
     /// </remarks>
     public virtual float[]? DashArray { get; init; }
     
-    public InterpolateSegments<Color>? LineColor { get; init; }
-    
-    public Color GetLineColor(float zoom) => LineColor?.Interpolate(zoom) ?? DefaultColor;
+    public IStyleValues<Color>? LineColor { get; init; }
 }
 
 /// <summary>
 /// Layer for drawing symbols and text
 /// </summary>
-public class VectorSymbolLayer : VectorMapStyleLayer
+public class VectorSymbolStyleLayer : VectorMapStyleLayer
 {
-    public VectorSymbolLayer(string? source = null, VectorMapFilter? filter = null) : base(source, filter)
+    public VectorSymbolStyleLayer(string? source = null, VectorMapFilter? filter = null) : base(source, filter)
     {
     }
-
-    public InterpolateSegments<float>? IconSize { get; init; }
-
-    public float GetIconSize(float zoom) => IconSize?.Interpolate(zoom) ?? 1;
-
-    public InterpolateSegments<Color>? IconColor { get; init; }
-
-    public Color GetIconColor(float zoom) => IconColor?.Interpolate(zoom) ?? DefaultColor;
-
-    public InterpolateSegments<float>? IconOpacity { get; init; }
-
-    public float GetIconOpacity(float zoom) => IconOpacity?.Interpolate(zoom) ?? 1;
-
-    public InterpolateSegments<float>? TextSize { get; init; }
-
-    public float GetTextSize(float zoom) => TextSize?.Interpolate(zoom) ?? 1;
-
-    public InterpolateSegments<Color>? TextColor { get; init; }
-
-    public Color GetTextColor(float zoom) => TextColor?.Interpolate(zoom) ?? DefaultColor;
-
-    public InterpolateSegments<float>? TextOpacity { get; init; }
     
-    public float GetTextOpacity(float zoom) => TextOpacity?.Interpolate(zoom) ?? 1;
+    public string? IconImage { get; init; } 
+
+    public IStyleValues<float>? IconSize { get; init; }
+
+    public IStyleValues<Color>? IconColor { get; init; }
+
+    public IStyleValues<float>? IconOpacity { get; init; }
+    
+    public IStyleValues<float>? IconRotate { get; init; }
+
+    public IStyleValues<float>? TextSize { get; init; }
+
+    public IStyleValues<Color>? TextColor { get; init; }
+
+    public IStyleValues<float>? TextOpacity { get; init; }
     
     public string? TextField { get; init; }
     
