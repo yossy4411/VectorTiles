@@ -1,9 +1,11 @@
+using VectorTiles.Styles.Values;
+
 namespace VectorTiles.Styles.Filters;
 
-public class BiggerFilter<T> : IStyleValueFilter<T>
+public class BiggerFilter<T> : IStyleValueFilter<T, T>
     where T : IComparable<T>
 {
-    public BiggerFilter(string key, T value)
+    public BiggerFilter(IStyleProperty<T> key, T value)
     {
         Key = key;
         Value = value;
@@ -12,23 +14,19 @@ public class BiggerFilter<T> : IStyleValueFilter<T>
     public bool Filter(Dictionary<string, object?>? values)
     {
         if (values is null) return false;
-        if (!values.TryGetValue(Key, out var value)) return false;
-        if (value is T o)
-        {
-            return o.CompareTo(Value) > 0;
-        }
+        var value = Key.GetValue(values);
+        return value.CompareTo(Value) > 0;
 
-        return false;
     }
 
-    public string Key { get; init; }
+    public IStyleProperty<T> Key { get; init; }
     public T Value { get; init; }
 }
 
-public class BiggerOrEqualFilter<T> : IStyleValueFilter<T>
+public class BiggerOrEqualFilter<T> : IStyleValueFilter<T, T>
     where T : IComparable<T>
 {
-    public BiggerOrEqualFilter(string key, T value)
+    public BiggerOrEqualFilter(IStyleProperty<T> key, T value)
     {
         Key = key;
         Value = value;
@@ -37,15 +35,10 @@ public class BiggerOrEqualFilter<T> : IStyleValueFilter<T>
     public bool Filter(Dictionary<string, object?>? values)
     {
         if (values is null) return false;
-        if (!values.TryGetValue(Key, out var value)) return false;
-        if (value is T o)
-        {
-            return o.CompareTo(Value) >= 0;
-        }
-
-        return false;
+        var value = Key.GetValue(values);
+        return value.CompareTo(Value) >= 0;
     }
 
-    public string Key { get; init; }
+    public IStyleProperty<T> Key { get; init; }
     public T Value { get; init; }
 }

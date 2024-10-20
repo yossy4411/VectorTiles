@@ -1,7 +1,9 @@
+using VectorTiles.Styles.Values;
+
 namespace VectorTiles.Styles.Filters;
 
-public interface IStyleValueFilter<out T> : IStyleFilter
+public interface IStyleValueFilter<out T1, out T2> : IStyleFilter
 {
-    public string Key { get; }
-    public T Value { get; }
+    public IStyleProperty<T1?> Key { get; }
+    public T2 Value { get; }
 }

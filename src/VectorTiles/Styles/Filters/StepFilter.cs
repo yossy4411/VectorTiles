@@ -1,12 +1,14 @@
+using VectorTiles.Styles.Values;
+
 namespace VectorTiles.Styles.Filters;
 
-public class StepFilter : IStyleValueFilter<List<float>>
+public class StepFilter : IStyleValueFilter<float, List<float>>
 {
     public List<IStyleFilter> Filters { get; }
     public List<float> Value { get; }
-    public string Key { get; }
+    public IStyleProperty<float> Key { get; }
     
-    public StepFilter(List<IStyleFilter> filters, List<float> stops, string key)
+    public StepFilter(List<IStyleFilter> filters, List<float> stops, IStyleProperty<float> key)
     {
         Filters = filters;
         Value = stops;
@@ -17,8 +19,7 @@ public class StepFilter : IStyleValueFilter<List<float>>
     {
         // ["step", ["get", "zoom"], <filter1>, 5, <filter2>, 10, <filter3>, 15, <filter4>]
         // 0-5: filter1, 5-10: filter2, 10-15: filter3, 15-: filter4
-        if (values is null || !values.TryGetValue(Key, out var v)) return false;
-        if (v is not float intValue) return false;
+        var intValue = Key.GetValue(values);
         if (intValue < Value[0]) return Filters[0].Filter(values);
                     
         if (Value.Count == 1) return Filters[1].Filter(values);

@@ -17,4 +17,9 @@ public class StaticValueProperty<T> : IStyleProperty<T?>
     {
         return _value;
     }
+
+    public override string ToString()
+    {
+        return $"( {_value} )";
+    }
 }

@@ -1,14 +1,16 @@
+using VectorTiles.Styles.Values;
+
 namespace VectorTiles.Styles.Filters;
 
 /// <summary>
 /// Filter for checking if two values are equal
 /// </summary>
-public class EqualFilter<T> : IStyleValueFilter<T>
+public class EqualFilter<T> : IStyleValueFilter<T, T>
 {
-    public string Key { get; init; }
+    public IStyleProperty<T?> Key { get; init; }
     public T Value { get; init; }
 
-    public EqualFilter(string key, T value)
+    public EqualFilter(IStyleProperty<T?> key, T value)
     {
         Key = key;
         Value = value;
@@ -17,18 +19,14 @@ public class EqualFilter<T> : IStyleValueFilter<T>
     public bool Filter(Dictionary<string, object?>? values)
     {
         if (values is null) return false;
-        if (values.TryGetValue(Key, out var value))
-        {
-            return value?.Equals(Value) ?? false;
-        }
-
-        return false;
+        var value = Key.GetValue(values);
+        return value?.Equals(Value) ?? false;
     }
 }
 
-public class NotEqualFilter<T> : IStyleValueFilter<T>
+public class NotEqualFilter<T> : IStyleValueFilter<T, T>
 {
-    public NotEqualFilter(string key, T value)
+    public NotEqualFilter(IStyleProperty<T?> key, T value)
     {
         Key = key;
         Value = value;
@@ -37,14 +35,10 @@ public class NotEqualFilter<T> : IStyleValueFilter<T>
     public bool Filter(Dictionary<string, object?>? values)
     {
         if (values is null) return false;
-        if (values.TryGetValue(Key, out var value))
-        {
-            return !value?.Equals(Value) ?? false;
-        }
-
-        return false;
+        var value = Key.GetValue(values);
+        return !value?.Equals(Value) ?? false;
     }
 
-    public string Key { get; init; }
+    public IStyleProperty<T?> Key { get; init; }
     public T Value { get; init; }
 }

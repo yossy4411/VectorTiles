@@ -205,6 +205,10 @@ public static class VectorMapStyleGL
 
     private static IStyleProperty<T?> ParseProperty<T>(JToken? tokenA, T defaultValue)
     {
+        if (tokenA is JValue jValue)
+        {
+            return ParseStaticValue<T>(jValue) ?? new StaticValueProperty<T>(defaultValue);
+        }
         if (tokenA is not JObject li)
         {
             if (tokenA is not JArray array)
@@ -240,15 +244,15 @@ public static class VectorMapStyleGL
                         "linear" => InterpolateType.Linear,
                         _ => InterpolateType.Linear
                     };
-                    var key = GetKey(array[2]);
-                    if (key is null) return new StaticValueProperty<T>(defaultValue);
-                    var segments = new InterpolateProperty<T>(type);
+                    var key = ParseProperty(array[2], 0f);
+                    var segments = new InterpolateProperty<T?>(type, key);
                     
                     for (var i = 3; i < array.Count; i += 2)
                     {
                         var zoom = array[i].ToObject<float>();
                         var value = array[i + 1];
-                        var seg = ParseInterpolation<T>(value, zoom);
+                        var valProp = ParseProperty(value, defaultValue);
+                        var seg = CreateSegment(zoom, valProp);
                         if (seg is not null)
                         {
                             segments.Add(seg);
@@ -256,6 +260,24 @@ public static class VectorMapStyleGL
                     }
                     
                     return segments;
+                }
+                case "case":
+                {
+                    // ["case", ["==", ["get", "vt_code"], 5322], "red", ["==", ["get", "vt_code"], 5323], "blue", "green"]
+                    var cases = new List<(IStyleFilter, IStyleProperty<T?>)>();
+                    for (var i = 1; i < array.Count - 1; i += 2)
+                    {
+                        var filter = GetFilter((JArray)array[i]);
+                        var value = array[i + 1];
+                        var valProp = ParseProperty(value, defaultValue);
+                        if (filter is not null)
+                        {
+                            cases.Add((filter, valProp));
+                        }
+                    }
+
+                    var defaultProp = ParseProperty(array[array.Count - 1], defaultValue);
+                    return new CaseProperty<T?>(cases, defaultProp);
                 }
 
                 default:
@@ -270,7 +292,7 @@ public static class VectorMapStyleGL
         {
             // New interpolation format
             // {"stops": [[0, "red"], [10, "blue"], [20, "green"]]}
-            var segments = new InterpolateProperty<T>(InterpolateType.Linear);
+            var segments = new InterpolateProperty<T?>(InterpolateType.Linear, new ValueGetProperty<float>{Key = "$zoom"});
             if (li["stops"] is not JArray stops) return segments;
             foreach (var stop in stops)
             {
@@ -278,7 +300,8 @@ public static class VectorMapStyleGL
                 if (token.Count < 2) continue;
                 var zoom = token[0].ToObject<float>();
                 var value = token[1];
-                var seg = ParseInterpolation<T>(value, zoom);
+                var valProp = ParseProperty(value, defaultValue);
+                var seg = CreateSegment(zoom, valProp);
                 if (seg is not null)
                 {
                     segments.Add(seg);
@@ -290,33 +313,41 @@ public static class VectorMapStyleGL
 
     }
 
-    private static InterpolateSegment<T>? ParseInterpolation<T>(JToken value, float zoom)
+    private static StaticValueProperty<T>? ParseStaticValue<T>(JToken value)
     {
         switch (value.Type)
         {
             case JTokenType.String:
             {
-                var seg = new InterpolateSegmentColor(zoom, ParseColor(value.ToObject<string>()));
-                if (seg is InterpolateSegment<T> seg1)
-                {
-                    return seg1;
-                }
-
-                break;
+                var seg = new StaticValueProperty<Color>(ParseColor(value.ToObject<string>()));
+                return seg as StaticValueProperty<T>;
             }
             case JTokenType.Float:
             {
-                var seg = new InterpolateSegmentFloat(zoom, value.ToObject<float>());
-                if (seg is InterpolateSegment<T> seg1)
-                {
-                    return seg1;
-                }
-
-                break;
+                var seg = new StaticValueProperty<float>(value.ToObject<float>());
+                return seg as StaticValueProperty<T>;
+            }
+            case JTokenType.Integer:
+            {
+                var seg = new StaticValueProperty<float>(value.ToObject<int>());
+                return seg as StaticValueProperty<T>;
+            }
+            default:
+            {
+                Debug.WriteLine("Unknown interpolation type: " + value.Type);
+                return null;
             }
         }
-        Debug.WriteLine("Unknown interpolation type: " + value.Type);
-        return null;
+    }
+    
+    private static InterpolateSegment<T>? CreateSegment<T>(float zoom, IStyleProperty<T> value)
+    {
+        return value switch
+        {
+            IStyleProperty<Color> color => new InterpolateSegmentColor(zoom, color) as InterpolateSegment<T>,
+            IStyleProperty<float> f => new InterpolateSegmentFloat(zoom, f) as InterpolateSegment<T>,
+            _ => null
+        };
     }
 
     private static IStyleFilter? GetFilter(JArray token)
@@ -382,10 +413,8 @@ public static class VectorMapStyleGL
                     var stop = token[i].ToObject<float>();
                     stops.Add(stop);
                 }
-                
-                var key = GetKey(token[1]);
-                if (key is null) return null;
 
+                var key = ParseProperty(token[1], 0f);
                 return new StepFilter(filterList, stops, key);
             }
         }
@@ -398,9 +427,6 @@ public static class VectorMapStyleGL
         var not = (token[0].Type == JTokenType.String ? token[0].ToObject<string>() : null) == "!";
         if (not)
             token = (JArray)token[1];
-        var keyToken = token[1];
-        var key = GetKey(keyToken);
-        if (key is null) return null;
         var filterType = token[0].ToObject<string>();
         if (not)
         {
@@ -412,7 +438,7 @@ public static class VectorMapStyleGL
                 "!in" => "in",
                 "==" => "!=",
                 "!=" => "==",
-                _ => key
+                _ => filterType
             }; // invert
         }
         
@@ -425,10 +451,10 @@ public static class VectorMapStyleGL
                 if (value is null) return null;
                 return type switch
                 {
-                    1 => new EqualFilter<string>(key, (string)value),
-                    2 => new EqualFilter<bool>(key, (bool)value),
-                    3 => new EqualFilter<int>(key, (int)value),
-                    4 => new EqualFilter<float>(key, (float)value),
+                    1 => new EqualFilter<string>(ParseProperty(token[1], string.Empty), (string)value),
+                    2 => new EqualFilter<bool>(ParseProperty(token[1], false), (bool)value),
+                    3 => new EqualFilter<int>(ParseProperty(token[1], 0), (int)value),
+                    4 => new EqualFilter<float>(ParseProperty(token[1], 0f), (float)value),
                     _ => null
                 };
             }
@@ -439,10 +465,10 @@ public static class VectorMapStyleGL
                 if (value is null) return null;
                 return type switch
                 {
-                    1 => new NotEqualFilter<string>(key, (string)value),
-                    2 => new NotEqualFilter<bool>(key, (bool)value),
-                    3 => new NotEqualFilter<int>(key, (int)value),
-                    4 => new NotEqualFilter<float>(key, (float)value),
+                    1 => new NotEqualFilter<string>(ParseProperty(token[1], string.Empty), (string)value),
+                    2 => new NotEqualFilter<bool>(ParseProperty(token[1], false), (bool)value),
+                    3 => new NotEqualFilter<int>(ParseProperty(token[1], 0), (int)value),
+                    4 => new NotEqualFilter<float>(ParseProperty(token[1], 0f), (float)value),
                     _ => null
                 };
             }
@@ -451,10 +477,10 @@ public static class VectorMapStyleGL
                 var values = InFilter(token, out var type);
                 return type switch
                 {
-                    1 => new InFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!).ToList()),
-                    2 => new InFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!).ToList()),
-                    3 => new InFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!).ToList()),
-                    4 => new InFilter<float>(key, values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
+                    1 => new InFilter<string>(ParseProperty(token[1], string.Empty), values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!).ToList()),
+                    2 => new InFilter<bool>(ParseProperty(token[1], false), values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!).ToList()),
+                    3 => new InFilter<int>(ParseProperty(token[1], 0), values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!).ToList()),
+                    4 => new InFilter<float>(ParseProperty(token[1], 0f), values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
                             (int)o.Item1! : (float)o.Item1!).ToList()),
                     _ => null
                 };
@@ -464,21 +490,23 @@ public static class VectorMapStyleGL
                 var values = InFilter(token, out var type);
                 return type switch
                 {
-                    1 => new NotInFilter<string>(key, values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!).ToList()),
-                    2 => new NotInFilter<bool>(key, values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!).ToList()),
-                    3 => new NotInFilter<int>(key, values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!).ToList()),
-                    4 => new NotInFilter<float>(key, values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
+                    1 => new NotInFilter<string>(ParseProperty(token[1], string.Empty), values.Where(o => o.Item1 is not null && o.Item2 == 1).Select(o => (string)o.Item1!).ToList()),
+                    2 => new NotInFilter<bool>(ParseProperty(token[1], false), values.Where(o => o.Item1 is not null && o.Item2 == 2).Select(o => (bool)o.Item1!).ToList()),
+                    3 => new NotInFilter<int>(ParseProperty(token[1], 0), values.Where(o => o.Item1 is not null && o.Item2 == 3).Select(o => (int)o.Item1!).ToList()),
+                    4 => new NotInFilter<float>(ParseProperty(token[1], 0f), values.Where(o => o.Item1 is not null && o.Item2 is 3 or 4).Select(o => o.Item2 == 3 ? 
                         (int)o.Item1! : (float)o.Item1!).ToList()),
                     _ => null
                 };
             }
             case "has":
             {
-                return new HasFilter(key);
+                var key = GetKey(token[1]);
+                return key is null ? null : new HasFilter(key);
             }
             case "!has":
             {
-                return new NotHasFilter(key);
+                var key = GetKey(token[1]);
+                return key is null ? null : new NotHasFilter(key);
             }
             case ">":
             {
@@ -486,9 +514,8 @@ public static class VectorMapStyleGL
                 if (value is null) return null;
                 return type switch
                 {
-                    1 => new BiggerFilter<string>(key, (string)value),
-                    3 => new BiggerFilter<int>(key, (int)value),
-                    4 => new BiggerFilter<float>(key, (float)value),
+                    3 => new BiggerFilter<int>(ParseProperty(token[1], 0), (int)value),
+                    4 => new BiggerFilter<float>(ParseProperty(token[1], 0f), (float)value),
                     _ => null
                 };
             }
@@ -498,9 +525,8 @@ public static class VectorMapStyleGL
                 if (value is null) return null;
                 return type switch
                 {
-                    1 => new BiggerOrEqualFilter<string>(key, (string)value),
-                    3 => new BiggerOrEqualFilter<int>(key, (int)value),
-                    4 => new BiggerOrEqualFilter<float>(key, (float)value),
+                    3 => new BiggerOrEqualFilter<int>(ParseProperty(token[1], 0), (int)value),
+                    4 => new BiggerOrEqualFilter<float>(ParseProperty(token[1], 0f), (float)value),
                     _ => null
                 };
             }
@@ -510,9 +536,8 @@ public static class VectorMapStyleGL
                 if (value is null) return null;
                 return type switch
                 {
-                    1 => new LesserFilter<string>(key, (string)value),
-                    3 => new LesserFilter<int>(key, (int)value),
-                    4 => new LesserFilter<float>(key, (float)value),
+                    3 => new LesserFilter<int>(ParseProperty(token[1], 0), (int)value),
+                    4 => new LesserFilter<float>(ParseProperty(token[1], 0f), (float)value),
                     _ => null
                 };
             }
@@ -522,9 +547,8 @@ public static class VectorMapStyleGL
                 if (value is null) return null;
                 return type switch
                 {
-                    1 => new LesserOrEqualFilter<string>(key, (string)value),
-                    3 => new LesserOrEqualFilter<int>(key, (int)value),
-                    4 => new LesserOrEqualFilter<float>(key, (float)value),
+                    3 => new LesserOrEqualFilter<int>(ParseProperty(token[1], 0), (int)value),
+                    4 => new LesserOrEqualFilter<float>(ParseProperty(token[1], 0f), (float)value),
                     _ => null
                 };
             }

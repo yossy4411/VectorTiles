@@ -17,4 +17,9 @@ public class ModuloProperty : IStyleProperty<float>
         var modulo = Modulo.GetValue(values);
         return value % modulo;
     }
+    
+    public override string ToString()
+    {
+        return $"( {Value} % {Modulo} )";
+    }
 }

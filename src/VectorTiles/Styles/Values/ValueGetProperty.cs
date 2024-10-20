@@ -17,4 +17,9 @@ public class ValueGetProperty<T> : IStyleProperty<T?>
 
         return default;
     }
+    
+    public override string ToString()
+    {
+        return $"($'{Key}')";
+    }
 }

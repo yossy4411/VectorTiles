@@ -1,8 +1,10 @@
+using VectorTiles.Styles.Values;
+
 namespace VectorTiles.Styles.Filters;
 
-public class InFilter<T> : IStyleValueFilter<List<T>>
+public class InFilter<T> : IStyleValueFilter<T, List<T>>
 {
-    public InFilter(string key, List<T> values)
+    public InFilter(IStyleProperty<T?> key, List<T> values)
     {
         Key = key;
         Value = values;
@@ -11,22 +13,17 @@ public class InFilter<T> : IStyleValueFilter<List<T>>
     public bool Filter(Dictionary<string, object?>? values)
     {
         if (values is null) return false;
-        if (!values.TryGetValue(Key, out var value)) return false;
-        if (value is T o)
-        {
-            return Value.Contains(o);
-        }
-
-        return false;
+        var value = Key.GetValue(values);
+        return value is not null && Value.Contains(value);
     }
 
-    public string Key { get; init; }
+    public IStyleProperty<T?> Key { get; init; }
     public List<T> Value { get; init; }
 }
 
-public class NotInFilter<T> : IStyleValueFilter<List<T>>
+public class NotInFilter<T> : IStyleValueFilter<T, List<T>>
 {
-    public NotInFilter(string key, List<T> values)
+    public NotInFilter(IStyleProperty<T?> key, List<T> values)
     {
         Key = key;
         Value = values;
@@ -35,15 +32,10 @@ public class NotInFilter<T> : IStyleValueFilter<List<T>>
     public bool Filter(Dictionary<string, object?>? values)
     {
         if (values is null) return false;
-        if (!values.TryGetValue(Key, out var value)) return false;
-        if (value is T o)
-        {
-            return !Value.Contains(o);
-        }
-
-        return false;
+        var value = Key.GetValue(values);
+        return value is null || !Value.Contains(value);
     }
 
-    public string Key { get; init; }
+    public IStyleProperty<T?> Key { get; init; }
     public List<T> Value { get; init; }
 }
