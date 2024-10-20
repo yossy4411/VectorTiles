@@ -280,6 +280,27 @@ public static class VectorMapStyleGL
                     return new CaseProperty<T?>(cases, defaultProp);
                 }
 
+                case "match":
+                {
+                    // ["match", ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
+                    var key = ParseProperty(array[1]);
+                    var cases = new List<(IConstValue, IConstValue)>();
+                    for (var i = 2; i < array.Count - 1; i += 2)
+                    {
+                        var value = array[i];
+                        var valProp = ParseValue(value);
+                        var result = array[i + 1];
+                        var resultProp = ParseValue(result);
+                        if (valProp is not null && resultProp is not null)
+                        {
+                            cases.Add((valProp, resultProp));
+                        }
+                    }
+                    var defaultProp = ParseValue(array[array.Count - 1]);
+                    if (defaultProp is null) return new StaticValueProperty(default);
+                    return new MatchProperty(key, cases, defaultProp);
+                    
+                }
                 default:
                 {
                     return new StaticValueProperty<T>(defaultValue);
