@@ -1,3 +1,5 @@
+using VectorTiles.Values;
+
 namespace VectorTiles.Styles.Filters;
 
 public class AllFilter : IStyleFilter
@@ -9,7 +11,7 @@ public class AllFilter : IStyleFilter
         Filters = filters;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is not null && Filters.All(f => f.Filter(values));
     }
@@ -24,7 +26,7 @@ public class NoneFilter : IStyleFilter
         Filters = filters;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is null || Filters.All(f => !f.Filter(values));
     }

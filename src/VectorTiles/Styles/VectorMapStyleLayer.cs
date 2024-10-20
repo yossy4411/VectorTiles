@@ -1,6 +1,7 @@
 using System.Drawing;
 using VectorTiles.Styles.Filters;
 using VectorTiles.Styles.Values;
+using VectorTiles.Values;
 
 namespace VectorTiles.Styles;
 
@@ -24,7 +25,7 @@ public abstract class VectorMapStyleLayer
         _filter = filter;
     }
     
-    public bool IsVisible(Dictionary<string, object?> values)
+    public bool IsVisible(Dictionary<string, IConstValue?> values)
     {
         return _filter?.Filter(values) ?? true;
     }
@@ -36,7 +37,7 @@ public abstract class VectorMapStyleLayer
 public class VectorBackgroundStyleLayer
     : VectorMapStyleLayer
 {
-    public IStyleProperty<Color>? BackgroundColor { get; init; }
+    public StyleProperty<Color>? BackgroundColor { get; init; }
 }
 
 public class VectorFillStyleLayer : VectorMapStyleLayer
@@ -45,7 +46,7 @@ public class VectorFillStyleLayer : VectorMapStyleLayer
     {
     }
     
-    public IStyleProperty<Color>? FillColor { get; init; }
+    public StyleProperty<Color>? FillColor { get; init; }
 }
 
 /// <summary>
@@ -57,7 +58,7 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
     {
     }
     
-    public IStyleProperty<float>? LineWidth { get; init; }
+    public StyleProperty<float>? LineWidth { get; init; }
     
     /// <summary>
     /// Pattern of dashes and gaps to be used when drawing lines.
@@ -68,7 +69,7 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
     /// </remarks>
     public virtual float[]? DashArray { get; init; }
     
-    public IStyleProperty<Color>? LineColor { get; init; }
+    public StyleProperty<Color>? LineColor { get; init; }
 }
 
 /// <summary>
@@ -82,19 +83,19 @@ public class VectorSymbolStyleLayer : VectorMapStyleLayer
     
     public string? IconImage { get; init; } 
 
-    public IStyleProperty<float>? IconSize { get; init; }
+    public StyleProperty<float>? IconSize { get; init; }
 
-    public IStyleProperty<Color>? IconColor { get; init; }
+    public StyleProperty<Color>? IconColor { get; init; }
 
-    public IStyleProperty<float>? IconOpacity { get; init; }
+    public StyleProperty<float>? IconOpacity { get; init; }
     
-    public IStyleProperty<float>? IconRotate { get; init; }
+    public StyleProperty<float>? IconRotate { get; init; }
 
-    public IStyleProperty<float>? TextSize { get; init; }
+    public StyleProperty<float>? TextSize { get; init; }
 
-    public IStyleProperty<Color>? TextColor { get; init; }
+    public StyleProperty<Color>? TextColor { get; init; }
 
-    public IStyleProperty<float>? TextOpacity { get; init; }
+    public StyleProperty<float>? TextOpacity { get; init; }
     
     public string? TextField { get; init; }
     

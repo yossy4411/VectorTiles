@@ -1,19 +1,20 @@
+using VectorTiles.Values;
+
 namespace VectorTiles.Styles.Values;
 
 /// <summary>
 /// A property that gets a static value
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public class StaticValueProperty<T> : IStyleProperty<T?>
+public class StaticValueProperty : IStyleProperty
 {
-    private readonly T? _value;
+    private readonly IConstValue? _value;
     
-    public StaticValueProperty(T? value)
+    public StaticValueProperty(IConstValue? value)
     {
         _value = value;
     }
 
-    public T? GetValue(Dictionary<string, object?>? values = null)
+    public IConstValue? GetValue(Dictionary<string, IConstValue?>? _ = null)
     {
         return _value;
     }

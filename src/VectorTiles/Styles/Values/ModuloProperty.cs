@@ -1,21 +1,24 @@
+using VectorTiles.Values;
+
 namespace VectorTiles.Styles.Values;
 
-public class ModuloProperty : IStyleProperty<float>
+public class ModuloProperty : IStyleProperty
 {
-    public IStyleProperty<float> Value { get; }
-    public IStyleProperty<float> Modulo { get; }
+    public IStyleProperty Value { get; }
+    public IStyleProperty Modulo { get; }
     
-    public ModuloProperty(IStyleProperty<float> value, IStyleProperty<float> modulo)
+    public ModuloProperty(IStyleProperty value, IStyleProperty modulo)
     {
         Value = value;
         Modulo = modulo;
     }
     
-    public float GetValue(Dictionary<string, object?>? values = null)
+    public IConstValue? GetValue(Dictionary<string, IConstValue?>? values = null)
     {
         var value = Value.GetValue(values);
         var modulo = Modulo.GetValue(values);
-        return value % modulo;
+        if (value is null || modulo is null) return null;
+        return value.Modulo(modulo);
     }
     
     public override string ToString()

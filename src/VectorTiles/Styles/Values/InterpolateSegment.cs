@@ -1,19 +1,19 @@
-using System.Drawing;
+using VectorTiles.Values;
 
 namespace VectorTiles.Styles.Values;
 
-public abstract class InterpolateSegment<T>
+public class InterpolateSegment
 {
     public float Zoom { get; }
-    public IStyleProperty<T> Value { get; }
+    public IStyleProperty Value { get; }
 
-    protected InterpolateSegment(float zoom, IStyleProperty<T> value)
+    public InterpolateSegment(float zoom, IStyleProperty value)
     {
         Zoom = zoom;
         Value = value;
     }
     
-    public void Deconstruct(out float zoom, out IStyleProperty<T> value)
+    public void Deconstruct(out float zoom, out IStyleProperty value)
     {
         zoom = Zoom;
         value = Value;
@@ -26,45 +26,17 @@ public abstract class InterpolateSegment<T>
     /// <param name="others">他の値</param>
     /// <param name="rate">この値の割合</param>
     /// <returns>補間された値</returns>
-    public abstract T Interpolate(Dictionary<string, object?> values, IStyleProperty<T> others, float rate);
+    public IConstValue? Interpolate(Dictionary<string, IConstValue?> values, IStyleProperty others, float rate)
+    {
+        var thisValue = Value.GetValue(values);
+        var otherValue = others.GetValue(values);
+        
+        if (thisValue is null || otherValue is null) return null;
+        return thisValue.Add(otherValue.Subtract(thisValue).Multiply(new ConstFloatValue(rate)));
+    }
     
     public override string ToString()
     {
         return $"( {Zoom}, {Value} )";
-    }
-}
-
-public class InterpolateSegmentFloat : InterpolateSegment<float>
-{
-    public InterpolateSegmentFloat(float zoom, IStyleProperty<float> value) : base(zoom, value)
-    {
-        
-    }
-
-    public override float Interpolate(Dictionary<string, object?> values, IStyleProperty<float> others, float rate)
-    {
-        var thisValue = Value.GetValue(values);
-        var otherValue = others.GetValue(values);
-        return thisValue + (otherValue - thisValue) * rate;
-    }
-}
-
-public class InterpolateSegmentColor : InterpolateSegment<Color>
-{
-    public InterpolateSegmentColor(float zoom, IStyleProperty<Color> value) : base(zoom, value)
-    {
-        
-    }
-
-    public override Color Interpolate(Dictionary<string, object?> values, IStyleProperty<Color> others, float rate)
-    {
-        var thisValue = Value.GetValue(values);
-        var otherValue = others.GetValue(values);
-        return Color.FromArgb(
-            (byte) (thisValue.A + (otherValue.A - thisValue.A) * rate),
-            (byte) (thisValue.R + (otherValue.R - thisValue.R) * rate),
-            (byte) (thisValue.G + (otherValue.G - thisValue.G) * rate),
-            (byte) (thisValue.B + (otherValue.B - thisValue.B) * rate)
-        );
     }
 }

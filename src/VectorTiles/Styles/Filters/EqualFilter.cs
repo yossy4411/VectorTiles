@@ -1,22 +1,23 @@
 using VectorTiles.Styles.Values;
+using VectorTiles.Values;
 
 namespace VectorTiles.Styles.Filters;
 
 /// <summary>
-/// Filter for checking if two values are equal
+/// Check if a value is equal to a constant value
 /// </summary>
-public class EqualFilter<T> : IStyleValueFilter<T, T>
+public class EqualFilter : IStyleFilter
 {
-    public IStyleProperty<T?> Key { get; init; }
-    public T Value { get; init; }
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
 
-    public EqualFilter(IStyleProperty<T?> key, T value)
+    public EqualFilter(IStyleProperty key, IConstValue value)
     {
         Key = key;
         Value = value;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
@@ -24,21 +25,24 @@ public class EqualFilter<T> : IStyleValueFilter<T, T>
     }
 }
 
-public class NotEqualFilter<T> : IStyleValueFilter<T, T>
+/// <summary>
+/// Check if a value is not equal to a constant value
+/// </summary>
+public class NotEqualFilter : IStyleFilter
 {
-    public NotEqualFilter(IStyleProperty<T?> key, T value)
+    public NotEqualFilter(IStyleProperty key, IConstValue value)
     {
         Key = key;
         Value = value;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
         return !value?.Equals(Value) ?? false;
     }
 
-    public IStyleProperty<T?> Key { get; init; }
-    public T Value { get; init; }
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
 }

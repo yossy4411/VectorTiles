@@ -1,32 +1,34 @@
 using VectorTiles.Styles.Values;
+using VectorTiles.Values;
 
 namespace VectorTiles.Styles.Filters;
 
-public class StepFilter : IStyleValueFilter<float, List<float>>
+public class StepFilter : IStyleFilter
 {
     public List<IStyleFilter> Filters { get; }
-    public List<float> Value { get; }
-    public IStyleProperty<float> Key { get; }
+    public List<IConstValue> Values { get; }
+    public IStyleProperty Key { get; }
     
-    public StepFilter(List<IStyleFilter> filters, List<float> stops, IStyleProperty<float> key)
+    public StepFilter(List<IStyleFilter> filters, List<IConstValue> stops, IStyleProperty key)
     {
         Filters = filters;
-        Value = stops;
+        Values = stops;
         Key = key;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         // ["step", ["get", "zoom"], <filter1>, 5, <filter2>, 10, <filter3>, 15, <filter4>]
         // 0-5: filter1, 5-10: filter2, 10-15: filter3, 15-: filter4
         var intValue = Key.GetValue(values);
-        if (intValue < Value[0]) return Filters[0].Filter(values);
+        if (intValue is null) return false;
+        if (intValue.CompareTo(Values[0]) <= 0) return Filters[0].Filter(values);
                     
-        if (Value.Count == 1) return Filters[1].Filter(values);
+        if (Values.Count == 1) return Filters[1].Filter(values);
         // Range check
-        for (var i = 0; i < Value.Count - 1; i++)
+        for (var i = 0; i < Values.Count - 1; i++)
         {
-            if (intValue >= Value[i] && intValue < Value[i + 1])
+            if (intValue.CompareTo(Values[i]) >= 0 && intValue.CompareTo(Values[i + 1]) < 0)
             {
                 return Filters[i + 1].Filter(values);
             }

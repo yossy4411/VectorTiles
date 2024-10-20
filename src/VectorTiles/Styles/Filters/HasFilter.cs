@@ -1,3 +1,5 @@
+using VectorTiles.Values;
+
 namespace VectorTiles.Styles.Filters;
 
 public class HasFilter : IStyleFilter
@@ -7,7 +9,7 @@ public class HasFilter : IStyleFilter
         Key = key;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is not null && values.ContainsKey(Key);
     }
@@ -22,7 +24,7 @@ public class NotHasFilter : IStyleFilter
         Key = key;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is null || !values.ContainsKey(Key);
     }

@@ -1,41 +1,42 @@
 using VectorTiles.Styles.Values;
+using VectorTiles.Values;
 
 namespace VectorTiles.Styles.Filters;
 
-public class InFilter<T> : IStyleValueFilter<T, List<T>>
+public class InFilter : IStyleFilter
 {
-    public InFilter(IStyleProperty<T?> key, List<T> values)
+    public InFilter(IStyleProperty key, List<IConstValue> values)
     {
         Key = key;
         Value = values;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
         return value is not null && Value.Contains(value);
     }
 
-    public IStyleProperty<T?> Key { get; init; }
-    public List<T> Value { get; init; }
+    public IStyleProperty Key { get; init; }
+    public List<IConstValue> Value { get; init; }
 }
 
-public class NotInFilter<T> : IStyleValueFilter<T, List<T>>
+public class NotInFilter : IStyleFilter
 {
-    public NotInFilter(IStyleProperty<T?> key, List<T> values)
+    public NotInFilter(IStyleProperty key, List<IConstValue> values)
     {
         Key = key;
         Value = values;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
         return value is null || !Value.Contains(value);
     }
 
-    public IStyleProperty<T?> Key { get; init; }
-    public List<T> Value { get; init; }
+    public IStyleProperty Key { get; init; }
+    public List<IConstValue> Value { get; init; }
 }

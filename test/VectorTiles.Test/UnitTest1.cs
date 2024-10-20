@@ -1,67 +1,99 @@
 using System.Diagnostics;
+using NUnit.Framework.Constraints;
+using VectorTiles.Styles;
+using VectorTiles.Styles.Filters;
 using VectorTiles.Styles.MapboxGL;
+using VectorTiles.Values;
 
 namespace VectorTiles.Test;
 
-public class Tests
+public class StyleJsonTests
 {
-    [Test]
-    public async ValueTask StyleJson()
+    private VectorMapStyle _style;
+    
+    [SetUp]
+    public async Task Setup()
     {
         var text = await File.ReadAllTextAsync("basic.json"); // Read the JSON file
-        var styles = VectorMapStyleGL.LoadGLJson(text);
+        _style = VectorMapStyleGL.LoadGLJson(text);
+    }
+    
+    [Test]
+    public void LoadTest()
+    {
+        Assert.That(_style, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(_style.Layers, Is.Not.Null);
+            Assert.That(_style.Layers, Is.Not.Empty);
+            Assert.That(_style.Sources, Is.Not.Null);
+        });
+        Assert.That(_style.Sources, Is.Not.Empty);
+        var source = _style.Sources[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(source.Url, new StartsWithConstraint("pmtiles://"));
+            Assert.That(source.Type, Is.EqualTo("vector"));
+            Assert.That(source.Attribution, Is.EqualTo("国土地理院最適化ベクトルタイル"));
+        });
+
+    }
+    
+    [Test]
+    public void VisibleTest()
+    {
         
-        Assert.That(styles, Is.Not.Null);
-        Dictionary<string, object?> values = new();
+        Assert.That(_style, Is.Not.Null);
+        Dictionary<string, IConstValue?> values = new();
         
         // Equal filter check
         // ["==", ["get", "vt_code"], 5322]
-        var layer = styles.Layers.First(x => x.Id == "河川中心線人工水路地下");
-        values["vt_code"] = 5322;
+        var layer = _style.Layers.First(x => x.Id == "河川中心線人工水路地下");
+        values["vt_code"] = new ConstIntValue(5322);
         Assert.That(layer.IsVisible(values), Is.True);
-        values["vt_code"] = 5323;
+        values["vt_code"] = new ConstIntValue(5323);
         Assert.That(layer.IsVisible(values), Is.False);
         
         // In filter check
         // ["in", ["get", "vt_code"], ["literal", [5101, 5103]]]
-        layer = styles.Layers.First(x => x.Id == "海岸線");
-        values["vt_code"] = 5101;
+        layer = _style.Layers.First(x => x.Id == "海岸線");
+        values["vt_code"] = new ConstIntValue(5101);
         Assert.That(layer.IsVisible(values), Is.True);
-        values["vt_code"] = 5102;
+        values["vt_code"] = new ConstIntValue(5102);
         Assert.That(layer.IsVisible(values), Is.False);
-        values["vt_code"] = 5103;
+        values["vt_code"] = new ConstIntValue(5103);
         Assert.That(layer.IsVisible(values), Is.True);
         
         // Not in filter check
         // ["!", ["in", ["get", "vt_code"], ["literal", [5302, 5322]]]]
-        layer = styles.Layers.First(x => x.Id == "河川中心線");
-        values["vt_code"] = 5301;
+        layer = _style.Layers.First(x => x.Id == "河川中心線");
+        values["vt_code"] = new ConstIntValue(5301);
         Assert.That(layer.IsVisible(values), Is.True);
-        values["vt_code"] = 5302;
+        values["vt_code"] = new ConstIntValue(5302);
         Assert.That(layer.IsVisible(values), Is.False);
-        values["vt_code"] = 5322;
+        values["vt_code"] = new ConstIntValue(5322);
         Assert.That(layer.IsVisible(values), Is.False);
         
         // Comparator filter check
         // [">=", ["get", "vt_lvorder"], 4]
-        layer = styles.Layers.First(x => x.Id == "建築物の外周線4");
-        values["vt_lvorder"] = 4;
+        layer = _style.Layers.First(x => x.Id == "建築物の外周線4");
+        values["vt_lvorder"] = new ConstIntValue(4);
         Assert.That(layer.IsVisible(values), Is.True);
-        values["vt_lvorder"] = 3;
+        values["vt_lvorder"] = new ConstIntValue(3);
         Assert.That(layer.IsVisible(values), Is.False);
-        values["vt_lvorder"] = 5;
+        values["vt_lvorder"] = new ConstIntValue(5);
         Assert.That(layer.IsVisible(values), Is.True);
         
         // All filter check
         // ["all", ["!", ["in", ["get", "vt_railstate"], ["literal", ["トンネル", "雪覆い", "地下", "橋・高架"]]]], ["==", ["get", "vt_lvorder"], 0]]
-        layer = styles.Layers.First(x => x.Id == "鉄道中心線0");
-        values["vt_railstate"] = "地上";
-        values["vt_lvorder"] = 0;
+        layer = _style.Layers.First(x => x.Id == "鉄道中心線0");
+        values["vt_railstate"] = new ConstStringValue("地上");
+        values["vt_lvorder"] = new ConstIntValue(0);
         Assert.That(layer.IsVisible(values), Is.True);
-        values["vt_railstate"] = "トンネル";
+        values["vt_railstate"] = new ConstStringValue("トンネル");
         Assert.That(layer.IsVisible(values), Is.False);
-        values["vt_railstate"] = "地上";
-        values["vt_lvorder"] = 1;
+        values["vt_railstate"] = new ConstStringValue("地上");
+        values["vt_lvorder"] = new ConstIntValue(1);
         Assert.That(layer.IsVisible(values), Is.False);
         
         // Any filter check
@@ -76,17 +108,18 @@ public class Tests
         // ["step", ["zoom"],
         //  ["all", ["==", ["get", "vt_lvorder"], 2], ["!", ["in", ["get", "vt_code"], ["literal", [2703, 2704, ...]], ["!", ["all", ["in", ["get", "vt_rdctg"], ["literal", ["市区町村道等", ...]]], ...]]],
         //  14, ["all", ["==", ["get", "vt_lvorder"], 2], ["!", ["in", ["get", "vt_code"], ["literal", [2703, 2704, ...]]]],
-        layer = styles.Layers.First(x => x.Id == "道路中心線ククリ2");
+        layer = _style.Layers.First(x => x.Id == "道路中心線ククリ2");
         values.Clear();
-        values["$zoom"] = 14f;
-        values["vt_lvorder"] = 2;
-        values["vt_code"] = 2701;
+        values["$zoom"] = new ConstFloatValue(14);
+        values["vt_lvorder"] = new ConstIntValue(2);
+        values["vt_code"] = new ConstIntValue(2701);
         Assert.That(layer.IsVisible(values), Is.True);
-        values["$zoom"] = 11f;
+        values["$zoom"] = new ConstFloatValue(11);
         Assert.That(layer.IsVisible(values), Is.True);
-        values["vt_rdctg"] = "市区町村道等";
+        values["vt_rdctg"] = new ConstStringValue("市区町村道等");
         Assert.That(layer.IsVisible(values), Is.False);
-        values["vt_rdctg"] = "国道等";
+        values["vt_rdctg"] = new ConstStringValue("国道等");
         Assert.That(layer.IsVisible(values), Is.True);
+        
     }
 }

@@ -1,44 +1,43 @@
 using VectorTiles.Styles.Values;
+using VectorTiles.Values;
 
 namespace VectorTiles.Styles.Filters;
 
-public class BiggerFilter<T> : IStyleValueFilter<T, T>
-    where T : IComparable<T>
+public class BiggerFilter : IStyleFilter
 {
-    public BiggerFilter(IStyleProperty<T> key, T value)
+    public BiggerFilter(IStyleProperty key, IConstValue value)
     {
         Key = key;
         Value = value;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
-        return value.CompareTo(Value) > 0;
+        return value != null && value.CompareTo(Value) > 0;
 
     }
 
-    public IStyleProperty<T> Key { get; init; }
-    public T Value { get; init; }
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
 }
 
-public class BiggerOrEqualFilter<T> : IStyleValueFilter<T, T>
-    where T : IComparable<T>
+public class BiggerOrEqualFilter : IStyleFilter
 {
-    public BiggerOrEqualFilter(IStyleProperty<T> key, T value)
+    public BiggerOrEqualFilter(IStyleProperty key, IConstValue value)
     {
         Key = key;
         Value = value;
     }
     
-    public bool Filter(Dictionary<string, object?>? values)
+    public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
-        return value.CompareTo(Value) >= 0;
+        return value != null && value.CompareTo(Value) >= 0;
     }
 
-    public IStyleProperty<T> Key { get; init; }
-    public T Value { get; init; }
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
 }
