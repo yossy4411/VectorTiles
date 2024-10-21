@@ -20,6 +20,11 @@ public class InFilter : IStyleFilter
 
     public IStyleProperty Key { get; init; }
     public List<IConstValue> Value { get; init; }
+    
+    public override string ToString()
+    {
+        return $"( {Key} IN {string.Join(", ", Value)} )";
+    }
 }
 
 public class NotInFilter : IStyleFilter
@@ -39,4 +44,9 @@ public class NotInFilter : IStyleFilter
 
     public IStyleProperty Key { get; init; }
     public List<IConstValue> Value { get; init; }
+    
+    public override string ToString()
+    {
+        return $"( {Key} NOT IN {string.Join(", ", Value)} )";
+    }
 }

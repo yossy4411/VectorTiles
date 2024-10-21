@@ -15,6 +15,11 @@ public class AllFilter : IStyleFilter
     {
         return values is not null && Filters.All(f => f.Filter(values));
     }
+    
+    public override string ToString()
+    {
+        return $"( {string.Join(" && ", Filters)} )";
+    }
 }
 
 public class NoneFilter : IStyleFilter
@@ -29,6 +34,11 @@ public class NoneFilter : IStyleFilter
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is null || Filters.All(f => !f.Filter(values));
+    }
+    
+    public override string ToString()
+    {
+        return $"( {string.Join(" && ", "!" + Filters)} )";
     }
 }
 

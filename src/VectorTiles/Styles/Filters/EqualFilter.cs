@@ -23,6 +23,11 @@ public class EqualFilter : IStyleFilter
         var value = Key.GetValue(values);
         return value?.Equals(Value) ?? false;
     }
+    
+    public override string ToString()
+    {
+        return $"( {Key} == {Value} )";
+    }
 }
 
 /// <summary>
@@ -45,4 +50,9 @@ public class NotEqualFilter : IStyleFilter
 
     public IStyleProperty Key { get; init; }
     public IConstValue Value { get; init; }
+    
+    public override string ToString()
+    {
+        return $"( {Key} != {Value} )";
+    }
 }

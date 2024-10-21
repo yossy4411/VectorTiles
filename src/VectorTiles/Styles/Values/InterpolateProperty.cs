@@ -53,7 +53,7 @@ public class InterpolateProperty : IStyleProperty
     
     public override string ToString()
     {
-        return $"( {string.Join(", ", _segments)} )";
+        return $"(INTERPOLATE {_key} WITH {string.Join(", ", _segments)} )";
     }
 }
 

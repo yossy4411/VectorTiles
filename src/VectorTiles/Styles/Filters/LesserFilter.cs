@@ -21,6 +21,11 @@ public class LesserFilter : IStyleFilter
 
     public IStyleProperty Key { get; init; }
     public IConstValue Value { get; init; }
+    
+    public override string ToString()
+    {
+        return $"( {Key} < {Value} )";
+    }
 }
 
 public class LesserOrEqualFilter : IStyleFilter
@@ -40,4 +45,9 @@ public class LesserOrEqualFilter : IStyleFilter
 
     public IStyleProperty Key { get; init; }
     public IConstValue Value { get; init; }
+    
+    public override string ToString()
+    {
+        return $"( {Key} <= {Value} )";
+    }
 }

@@ -15,4 +15,9 @@ public class AnyFilter : IStyleFilter
     {
         return values is not null && Filters.Any(f => f.Filter(values));
     }
+    
+    public override string ToString()
+    {
+        return $"( {string.Join(" || ", Filters)} )";
+    }
 }

@@ -15,6 +15,11 @@ public class HasFilter : IStyleFilter
     }
 
     public string Key { get; init; }
+    
+    public override string ToString()
+    {
+        return $"( !HAS {Key} )";
+    }
 }
 
 public class NotHasFilter : IStyleFilter
@@ -30,4 +35,9 @@ public class NotHasFilter : IStyleFilter
     }
 
     public string Key { get; init; }
+    
+    public override string ToString()
+    {
+        return $"( HAS {Key} )";
+    }
 }

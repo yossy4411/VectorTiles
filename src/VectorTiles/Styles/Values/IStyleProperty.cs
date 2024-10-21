@@ -34,6 +34,11 @@ public class StyleProperty<T>
         }
         return default;
     }
+    
+    public override string? ToString()
+    {
+        return Property.ToString();
+    }
 }
 
 public static class StylePropertyExtensions

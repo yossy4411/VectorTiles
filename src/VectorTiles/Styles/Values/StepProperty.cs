@@ -33,4 +33,9 @@ public class StepProperty : IStyleProperty
         }
         return Values[^1].GetValue(values);
     }
+    
+    public override string ToString()
+    {
+        return $"( {Key} STEP {string.Join(", ", Steps)} )";
+    }
 }

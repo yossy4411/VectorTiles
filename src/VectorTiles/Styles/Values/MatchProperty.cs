@@ -30,4 +30,9 @@ public class MatchProperty : IStyleProperty
 
         return DefaultValue;
     }
+    
+    public override string ToString()
+    {
+        return $"( {Key} MATCH {string.Join(", ", Values.Select(v => $"({string.Join<IConstValue>(", ", v.Item1)} -> {v.Item2})"))} )";
+    }
 }

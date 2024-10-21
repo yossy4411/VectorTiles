@@ -19,6 +19,11 @@ public class FalseFilter : IStyleFilter
     {
         return false;
     }
+    
+    public override string ToString()
+    {
+        return "false";
+    }
 }
 
 public class TrueFilter : IStyleFilter
@@ -27,5 +32,10 @@ public class TrueFilter : IStyleFilter
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return true;
+    }
+    
+    public override string ToString()
+    {
+        return "true";
     }
 }

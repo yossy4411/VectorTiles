@@ -36,4 +36,9 @@ public class StepFilter : IStyleFilter
         // exceeded the last stop, return the last filter
         return Filters[^1].Filter(values);
     }
+    
+    public override string ToString()
+    {
+        return $"( {Key} STEP {string.Join(", ", Values)} )";
+    }
 }

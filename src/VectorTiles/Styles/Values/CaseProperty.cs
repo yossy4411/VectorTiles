@@ -34,12 +34,6 @@ public class CaseProperty : IStyleProperty
 
     public override string ToString()
     {
-        var str = "switch (";
-        foreach (var (filter, property) in Cases)
-        {
-            str += $"case {filter} => return {property};";
-        }
-        str += $"default => return {Default};";
-        return str;
+        return $"(CASE {string.Join(" ", Cases.Select(c => $"WHEN {c.Filter} THEN {c.Property}").Append($"ELSE {Default}"))} END)";
     }
 }

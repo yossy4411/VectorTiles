@@ -22,6 +22,6 @@ public class ValueGetProperty : IStyleProperty
     
     public override string ToString()
     {
-        return $"($'{Key}')";
+        return $"( ${Key} )";
     }
 }
