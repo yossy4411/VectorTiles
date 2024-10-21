@@ -336,6 +336,27 @@ public static class VectorMapStyleGL
                     return new MatchProperty(key, cases, defaultProp);
                     
                 }
+                
+                case "step":
+                {
+                    // ["step", ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
+                    List<IStyleProperty> filterList = new();
+                    List<IConstValue> stops = new();
+                    filterList.Add(ParseProperty(array[2]));
+                    for (var i = 3; i < array.Count; i+=2)
+                    {
+                        var filter = ParseProperty(array[i + 1]);
+                        filterList.Add(filter);
+                        var stop = ParseValue(array[i]);
+                        if (stop is not null)
+                        {
+                            stops.Add(stop);
+                        }
+                    }
+
+                    var key = ParseProperty(array[1]);
+                    return new StepProperty(filterList, stops, key);
+                }
                 default:
                 {
                     return new StaticValueProperty(default);
