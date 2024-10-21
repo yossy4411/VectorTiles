@@ -4,15 +4,15 @@ namespace VectorTiles.Styles.Values;
 
 public class InterpolateSegment
 {
-    public float Zoom { get; }
-    public IStyleProperty Value { get; }
-
     public InterpolateSegment(float zoom, IStyleProperty value)
     {
         Zoom = zoom;
         Value = value;
     }
-    
+
+    public float Zoom { get; }
+    public IStyleProperty Value { get; }
+
     public void Deconstruct(out float zoom, out IStyleProperty value)
     {
         zoom = Zoom;
@@ -20,7 +20,7 @@ public class InterpolateSegment
     }
 
     /// <summary>
-    /// 間の値を補間する
+    ///     間の値を補間する
     /// </summary>
     /// <param name="values"></param>
     /// <param name="others">他の値</param>
@@ -30,11 +30,11 @@ public class InterpolateSegment
     {
         var thisValue = Value.GetValue(values);
         var otherValue = others.GetValue(values);
-        
+
         if (thisValue is null || otherValue is null) return null;
         return thisValue.Add(otherValue.Subtract(thisValue).Multiply(new ConstFloatValue(rate)));
     }
-    
+
     public override string ToString()
     {
         return $"( {Zoom}, {Value} )";

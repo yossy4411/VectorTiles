@@ -1,20 +1,18 @@
-using VectorTiles.Styles.Values;
-
 namespace VectorTiles.Values;
 
 public class ConstStringValue : IConstValue
 {
-    public object Value => _value;
-    
     private readonly string _value;
-    
-    public StyleConstValueType ValueType => StyleConstValueType.String;
-    
+
     public ConstStringValue(string value)
     {
         _value = value;
     }
-    
+
+    public object Value => _value;
+
+    public StyleConstValueType ValueType => StyleConstValueType.String;
+
     public bool Equals(IConstValue? other)
     {
         if (other is null) return false;
@@ -24,7 +22,7 @@ public class ConstStringValue : IConstValue
             _ => false
         };
     }
-    
+
     public int CompareTo(IConstValue? other)
     {
         if (other is null) return 1;
@@ -34,7 +32,7 @@ public class ConstStringValue : IConstValue
             _ => 1
         };
     }
-    
+
     public IConstValue Add(IConstValue value)
     {
         return value.ValueType switch
@@ -43,39 +41,42 @@ public class ConstStringValue : IConstValue
             _ => this
         };
     }
-    
+
     public IConstValue Subtract(IConstValue value)
     {
         return this;
     }
-    
+
     public IConstValue Multiply(IConstValue value)
     {
         return this;
     }
-    
+
     public IConstValue Divide(IConstValue value)
     {
         return this;
     }
-    
+
     public IConstValue Modulo(IConstValue value)
     {
         return this;
     }
-    
+
     public override string ToString()
     {
         return _value;
     }
-    
-    public static implicit operator string(ConstStringValue value) => value._value;
+
+    public static implicit operator string(ConstStringValue value)
+    {
+        return value._value;
+    }
 
     public override bool Equals(object? obj)
     {
         return obj is ConstStringValue other && Equals(other);
     }
-    
+
     public override int GetHashCode()
     {
         return _value.GetHashCode();

@@ -9,14 +9,14 @@ namespace VectorTiles.Test;
 public class StyleJsonTests
 {
     private VectorMapStyle _style;
-    
+
     [SetUp]
     public async Task Setup()
     {
         var text = await File.ReadAllTextAsync("basic.json"); // Read the JSON file
         _style = VectorMapStyleGL.LoadGLJson(text);
     }
-    
+
     [Test]
     public void LoadTest()
     {
@@ -35,13 +35,11 @@ public class StyleJsonTests
             Assert.That(source.Type, Is.EqualTo("vector"));
             Assert.That(source.Attribution, Is.EqualTo("国土地理院最適化ベクトルタイル"));
         });
-
     }
-    
+
     [Test]
     public void VisibleTest()
     {
-        
         Assert.That(_style, Is.Not.Null);
         Dictionary<string, IConstValue?> values = new();
         Assert.Multiple(() =>
@@ -137,7 +135,6 @@ public class StyleJsonTests
                 Assert.That(layer.IsVisible(values), Is.True);
             });
         });
-
     }
 
     [Test]
@@ -145,14 +142,13 @@ public class StyleJsonTests
     {
         Assert.That(_style, Is.Not.Null);
         Dictionary<string, IConstValue?> values = new();
-        
-        
-        
+
+
         // Interpolate property check
         // ["interpolate",["linear"],["zoom"],15,["match",["get","vt_code"],5321,0.5,1], 16, ["match",["get","vt_code"],5321,2,1]]
         var layer = _style.Layers.First(x => x.Id == "河川中心線");
         Assert.That(layer, Is.InstanceOf<VectorLineStyleLayer>());
-        var fillLayer = (VectorLineStyleLayer) layer;
+        var fillLayer = (VectorLineStyleLayer)layer;
         values["$zoom"] = new ConstFloatValue(15);
         values["vt_code"] = new ConstIntValue(5321);
         Assert.That(fillLayer.LineWidth, Is.Not.Null);
@@ -162,15 +158,14 @@ public class StyleJsonTests
         values["$zoom"] = new ConstFloatValue(16);
         values["vt_code"] = new ConstIntValue(5321);
         Assert.That(fillLayer.LineWidth.GetValue(values), Is.EqualTo(2f));
-        
+
         // Match property check
         // ["match", ["get","vt_code"], [5203,5233], "rgba(120, 120, 120, 1)", "rgba(20, 90, 255, 1)"]
         layer = _style.Layers.First(x => x.Id == "水涯線");
         Assert.That(layer, Is.InstanceOf<VectorLineStyleLayer>());
-        fillLayer = (VectorLineStyleLayer) layer;
+        fillLayer = (VectorLineStyleLayer)layer;
         values["vt_code"] = new ConstIntValue(5203);
         Assert.That(fillLayer.LineColor, Is.Not.Null);
         Assert.That(fillLayer.LineColor.GetValue(values), Is.EqualTo(Color.FromArgb(255, 120, 120, 120)));
-        
     }
 }

@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using VectorTiles.Styles.Values;
 
 namespace VectorTiles.Values;
 
@@ -10,12 +9,12 @@ public readonly struct ConstIntValue : IConstValue
 
 
     public StyleConstValueType ValueType => StyleConstValueType.Int;
-    
+
     public ConstIntValue(int value)
     {
         _value = value;
     }
-    
+
     public bool Equals(IConstValue? other)
     {
         if (other is null) return false;
@@ -26,7 +25,7 @@ public readonly struct ConstIntValue : IConstValue
             _ => false
         };
     }
-    
+
     public int CompareTo(IConstValue? other)
     {
         if (other is null) return 1;
@@ -37,7 +36,7 @@ public readonly struct ConstIntValue : IConstValue
             _ => 1
         };
     }
-    
+
     public IConstValue Add(IConstValue value)
     {
         return value.ValueType switch
@@ -47,7 +46,7 @@ public readonly struct ConstIntValue : IConstValue
             _ => this
         };
     }
-    
+
     public IConstValue Subtract(IConstValue value)
     {
         return value.ValueType switch
@@ -57,7 +56,7 @@ public readonly struct ConstIntValue : IConstValue
             _ => this
         };
     }
-    
+
     public IConstValue Multiply(IConstValue value)
     {
         return value.ValueType switch
@@ -67,7 +66,7 @@ public readonly struct ConstIntValue : IConstValue
             _ => this
         };
     }
-    
+
     public IConstValue Divide(IConstValue value)
     {
         return value.ValueType switch
@@ -77,7 +76,7 @@ public readonly struct ConstIntValue : IConstValue
             _ => this
         };
     }
-    
+
     public IConstValue Modulo(IConstValue value)
     {
         return value.ValueType switch
@@ -87,21 +86,27 @@ public readonly struct ConstIntValue : IConstValue
             _ => this
         };
     }
-    
+
     public override string ToString()
     {
         return _value.ToString();
     }
-    
-    public static implicit operator int(ConstIntValue value) => value._value;
-    
-    public static implicit operator float(ConstIntValue value) => value._value;
+
+    public static implicit operator int(ConstIntValue value)
+    {
+        return value._value;
+    }
+
+    public static implicit operator float(ConstIntValue value)
+    {
+        return value._value;
+    }
 
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
         return obj is IConstValue value && Equals(value);
     }
-    
+
     public override int GetHashCode()
     {
         return _value;

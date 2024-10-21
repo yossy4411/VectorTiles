@@ -10,7 +10,10 @@ public class InFilter : IStyleFilter
         Key = key;
         Value = values;
     }
-    
+
+    public IStyleProperty Key { get; init; }
+    public List<IConstValue> Value { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
@@ -18,9 +21,6 @@ public class InFilter : IStyleFilter
         return value is not null && Value.Contains(value);
     }
 
-    public IStyleProperty Key { get; init; }
-    public List<IConstValue> Value { get; init; }
-    
     public override string ToString()
     {
         return $"( {Key} IN {string.Join(", ", Value)} )";
@@ -34,7 +34,10 @@ public class NotInFilter : IStyleFilter
         Key = key;
         Value = values;
     }
-    
+
+    public IStyleProperty Key { get; init; }
+    public List<IConstValue> Value { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
@@ -42,9 +45,6 @@ public class NotInFilter : IStyleFilter
         return value is null || !Value.Contains(value);
     }
 
-    public IStyleProperty Key { get; init; }
-    public List<IConstValue> Value { get; init; }
-    
     public override string ToString()
     {
         return $"( {Key} NOT IN {string.Join(", ", Value)} )";

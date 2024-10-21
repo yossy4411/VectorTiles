@@ -5,7 +5,7 @@ namespace VectorTiles.Styles.Filters;
 public interface IStyleFilter
 {
     /// <summary>
-    /// Filter values.
+    ///     Filter values.
     /// </summary>
     /// <param name="values">values dictionary</param>
     /// <returns>True if the values pass the filter, otherwise false</returns>
@@ -14,12 +14,13 @@ public interface IStyleFilter
 
 public class FalseFilter : IStyleFilter
 {
-    public static readonly FalseFilter Instance = new FalseFilter();
+    public static readonly FalseFilter Instance = new();
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return false;
     }
-    
+
     public override string ToString()
     {
         return "false";
@@ -28,12 +29,13 @@ public class FalseFilter : IStyleFilter
 
 public class TrueFilter : IStyleFilter
 {
-    public static readonly TrueFilter Instance = new TrueFilter();
+    public static readonly TrueFilter Instance = new();
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return true;
     }
-    
+
     public override string ToString()
     {
         return "true";

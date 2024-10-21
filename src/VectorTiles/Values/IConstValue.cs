@@ -2,6 +2,8 @@ namespace VectorTiles.Values;
 
 public interface IConstValue
 {
+    object Value { get; }
+    StyleConstValueType ValueType { get; }
     bool Equals(IConstValue? other);
     int CompareTo(IConstValue? other);
     string ToString();
@@ -10,9 +12,6 @@ public interface IConstValue
     IConstValue Multiply(IConstValue value);
     IConstValue Divide(IConstValue value);
     IConstValue Modulo(IConstValue value);
-    
-    object Value { get; }
-    StyleConstValueType ValueType { get; }
 }
 
 public enum StyleConstValueType

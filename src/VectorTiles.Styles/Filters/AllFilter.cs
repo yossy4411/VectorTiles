@@ -4,18 +4,18 @@ namespace VectorTiles.Styles.Filters;
 
 public class AllFilter : IStyleFilter
 {
-    public List<IStyleFilter> Filters { get; }
-    
     public AllFilter(List<IStyleFilter> filters)
     {
         Filters = filters;
     }
-    
+
+    public List<IStyleFilter> Filters { get; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is not null && Filters.All(f => f.Filter(values));
     }
-    
+
     public override string ToString()
     {
         return $"( {string.Join(" && ", Filters)} )";
@@ -24,21 +24,20 @@ public class AllFilter : IStyleFilter
 
 public class NoneFilter : IStyleFilter
 {
-    public List<IStyleFilter> Filters { get; }
-    
     public NoneFilter(List<IStyleFilter> filters)
     {
         Filters = filters;
     }
-    
+
+    public List<IStyleFilter> Filters { get; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is null || Filters.All(f => !f.Filter(values));
     }
-    
+
     public override string ToString()
     {
         return $"( {string.Join(" && ", "!" + Filters)} )";
     }
 }
-

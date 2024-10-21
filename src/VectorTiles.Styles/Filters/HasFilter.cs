@@ -8,14 +8,14 @@ public class HasFilter : IStyleFilter
     {
         Key = key;
     }
-    
+
+    public string Key { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is not null && values.ContainsKey(Key);
     }
 
-    public string Key { get; init; }
-    
     public override string ToString()
     {
         return $"( !HAS {Key} )";
@@ -28,14 +28,14 @@ public class NotHasFilter : IStyleFilter
     {
         Key = key;
     }
-    
+
+    public string Key { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         return values is null || !values.ContainsKey(Key);
     }
 
-    public string Key { get; init; }
-    
     public override string ToString()
     {
         return $"( HAS {Key} )";

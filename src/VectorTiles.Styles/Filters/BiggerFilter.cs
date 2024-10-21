@@ -3,51 +3,50 @@ using VectorTiles.Values;
 
 namespace VectorTiles.Styles.Filters;
 
-public class LesserFilter : IStyleFilter
+public class BiggerFilter : IStyleFilter
 {
-    public LesserFilter(IStyleProperty key, IConstValue value)
+    public BiggerFilter(IStyleProperty key, IConstValue value)
     {
         Key = key;
         Value = value;
     }
-    
+
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
-        return value != null && value.CompareTo(Value) < 0;
-
+        return value != null && value.CompareTo(Value) > 0;
     }
 
-    public IStyleProperty Key { get; init; }
-    public IConstValue Value { get; init; }
-    
     public override string ToString()
     {
-        return $"( {Key} < {Value} )";
+        return $"( {Key} > {Value} )";
     }
 }
 
-public class LesserOrEqualFilter : IStyleFilter
+public class BiggerOrEqualFilter : IStyleFilter
 {
-    public LesserOrEqualFilter(IStyleProperty key, IConstValue value)
+    public BiggerOrEqualFilter(IStyleProperty key, IConstValue value)
     {
         Key = key;
         Value = value;
     }
-    
+
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
-        return value != null && value.CompareTo(Value) <= 0;
+        return value != null && value.CompareTo(Value) >= 0;
     }
 
-    public IStyleProperty Key { get; init; }
-    public IConstValue Value { get; init; }
-    
     public override string ToString()
     {
-        return $"( {Key} <= {Value} )";
+        return $"( {Key} >= {Value} )";
     }
 }

@@ -3,12 +3,12 @@ using VectorTiles.Values;
 namespace VectorTiles.Styles.Values;
 
 /// <summary>
-/// A property that gets a static value
+///     A property that gets a static value
 /// </summary>
 public class StaticValueProperty : IStyleProperty
 {
     private readonly IConstValue? _value;
-    
+
     public StaticValueProperty(IConstValue? value)
     {
         _value = value;

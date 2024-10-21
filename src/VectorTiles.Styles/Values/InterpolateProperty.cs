@@ -3,26 +3,20 @@ using VectorTiles.Values;
 namespace VectorTiles.Styles.Values;
 
 /// <summary>
-/// Interpolate segments
+///     Interpolate segments
 /// </summary>
 public class InterpolateProperty : IStyleProperty
 {
-    private readonly InterpolateType _type;
-    
     private readonly IStyleProperty? _key;
 
     private readonly List<InterpolateSegment> _segments;
+    private readonly InterpolateType _type;
 
     public InterpolateProperty(InterpolateType type, IStyleProperty? key, List<InterpolateSegment>? segments = null)
     {
         _segments = segments ?? new List<InterpolateSegment>();
         _type = type;
         _key = key;
-    }
-    
-    public void Add(InterpolateSegment segment)
-    {
-        _segments.Add(segment);
     }
 
     public IConstValue? GetValue(Dictionary<string, IConstValue?>? values = null)
@@ -50,7 +44,12 @@ public class InterpolateProperty : IStyleProperty
             }
         }
     }
-    
+
+    public void Add(InterpolateSegment segment)
+    {
+        _segments.Add(segment);
+    }
+
     public override string ToString()
     {
         return $"(INTERPOLATE {_key} WITH {string.Join(", ", _segments)} )";
@@ -59,6 +58,6 @@ public class InterpolateProperty : IStyleProperty
 
 public enum InterpolateType
 {
-    Linear,
+    Linear
     // todo: Add more types
 }

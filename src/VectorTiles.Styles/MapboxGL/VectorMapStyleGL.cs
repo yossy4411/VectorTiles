@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using VectorTiles.Styles.Filters;
@@ -23,7 +24,7 @@ public static class VectorMapStyleGL
                 Layers = layersList
             };
         List<VectorMapSource> sourceList = new();
-        
+
         foreach (var (_, value) in sources)
         {
             if (value is not JObject) continue;
@@ -45,9 +46,9 @@ public static class VectorMapStyleGL
             Sources = sourceList
         };
     }
-    
+
     /// <summary>
-    /// Parse color
+    ///     Parse color
     /// </summary>
     /// <param name="value">Color string</param>
     /// <param name="color">Color value</param>
@@ -59,9 +60,10 @@ public static class VectorMapStyleGL
             color = Color.Empty;
             return false;
         }
+
         if (value.StartsWith('#'))
         {
-            color = Color.FromArgb(int.Parse(value[1..], System.Globalization.NumberStyles.HexNumber));
+            color = Color.FromArgb(int.Parse(value[1..], NumberStyles.HexNumber));
             return true;
         }
 
@@ -91,7 +93,7 @@ public static class VectorMapStyleGL
                 float.Parse(values[2].TrimEnd('%')) / 100, a);
             return true;
         }
-        
+
         if (value.StartsWith("hsl"))
         {
             // ex. hsl(120,100%,50%)
@@ -100,7 +102,7 @@ public static class VectorMapStyleGL
                 float.Parse(values[2].TrimEnd('%')) / 100);
             return true;
         }
-        
+
         Debug.WriteLine("Unknown color format: " + value);
         color = Color.Empty;
         return false;
@@ -109,7 +111,7 @@ public static class VectorMapStyleGL
     private static Color FromHsl(float hue, float saturation, float lightness, byte alpha = 255)
     {
         var c = (1 - Math.Abs(2 * lightness - 1)) * saturation;
-        var x = c * (1 - Math.Abs((hue / 60) % 2 - 1));
+        var x = c * (1 - Math.Abs(hue / 60 % 2 - 1));
         var m = lightness - c / 2;
 
         var (r, g, b) = hue switch
@@ -119,7 +121,7 @@ public static class VectorMapStyleGL
             >= 120 and < 180 => (0, c, x),
             >= 180 and < 240 => (0, x, c),
             >= 240 and < 300 => (x, 0, c),
-            _ => (c, 0, x),
+            _ => (c, 0, x)
         };
 
         // RGBを0-255の範囲に変換
@@ -129,7 +131,7 @@ public static class VectorMapStyleGL
 
         return Color.FromArgb(alpha, r1, r2, r3);
     }
-    
+
     private static VectorMapStyleLayer? NewLayer(JToken jToken)
     {
         var filterToken = jToken["filter"];
@@ -164,11 +166,9 @@ public static class VectorMapStyleGL
                 var dashToken = paintToken["line-dasharray"];
                 var dashToken1 = dashToken?[0];
                 // {"line-dasharray": ["literal", [1, 2]]} or {"line-dasharray": [1, 2]} <- What's the difference?
-                var dashArray = dashToken1 is null ? 
-                    null : 
-                    dashToken1.Type == JTokenType.String ? 
-                        dashToken![1]?.ToObject<float[]>() : 
-                        dashToken!.ToObject<float[]>();
+                var dashArray = dashToken1 is null ? null :
+                    dashToken1.Type == JTokenType.String ? dashToken![1]?.ToObject<float[]>() :
+                    dashToken!.ToObject<float[]>();
                 var dashArrayActual = dashArray is null || dashArray.Length % 2 != 0
                     ? null
                     : dashArray;
@@ -225,27 +225,20 @@ public static class VectorMapStyleGL
 
     private static IStyleProperty ParseProperty(JToken? tokenA)
     {
-        if (tokenA is JValue jValue)
-        {
-            return ParseStaticValue(jValue) ?? new StaticValueProperty(default);
-        }
+        if (tokenA is JValue jValue) return ParseStaticValue(jValue) ?? new StaticValueProperty(default);
         if (tokenA is not JObject li)
         {
             if (tokenA is not JArray array)
-            {
                 // I don't know what is the value
                 return new StaticValueProperty(default);
-            }
-            
+
             if (array.Count == 1)
-            {
                 // might: ["zoom"]
                 return new ValueGetProperty
                 {
                     Key = GetKey(array)
                 };
-            }
-            
+
             switch (array[0].ToObject<string>())
             {
                 case "get":
@@ -275,7 +268,7 @@ public static class VectorMapStyleGL
                     };
                     var key = ParseProperty(array[2]);
                     var segments = new InterpolateProperty(type, key);
-                    
+
                     for (var i = 3; i < array.Count; i += 2)
                     {
                         var zoom = array[i].ToObject<float>();
@@ -284,7 +277,7 @@ public static class VectorMapStyleGL
                         var seg = new InterpolateSegment(zoom, valProp);
                         segments.Add(seg);
                     }
-                    
+
                     return segments;
                 }
                 case "case":
@@ -296,10 +289,7 @@ public static class VectorMapStyleGL
                         var filter = GetFilter((JArray)array[i]);
                         var value = array[i + 1];
                         var valProp = ParseValue(value);
-                        if (filter is not null && valProp is not null)
-                        {
-                            cases.Add((filter, valProp));
-                        }
+                        if (filter is not null && valProp is not null) cases.Add((filter, valProp));
                     }
 
                     var defaultProp = ParseValue(array[array.Count - 1]);
@@ -320,38 +310,35 @@ public static class VectorMapStyleGL
                         {
                             var caseValue = ParseValue(value);
                             if (caseValue is null) continue;
-                            caseProp = new[] {caseValue};
+                            caseProp = new[] { caseValue };
                         }
                         else
+                        {
                             caseProp = value.Select(ParseValue).OfType<IConstValue>().ToArray();
+                        }
+
                         var result = array[i + 1];
                         var resultProp = ParseValue(result);
-                        if (resultProp is not null)
-                        {
-                            cases.Add((caseProp, resultProp));
-                        }
+                        if (resultProp is not null) cases.Add((caseProp, resultProp));
                     }
+
                     var defaultProp = ParseValue(array[array.Count - 1]);
                     if (defaultProp is null) return new StaticValueProperty(default);
                     return new MatchProperty(key, cases, defaultProp);
-                    
                 }
-                
+
                 case "step":
                 {
                     // ["step", ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
                     List<IStyleProperty> filterList = new();
                     List<IConstValue> stops = new();
                     filterList.Add(ParseProperty(array[2]));
-                    for (var i = 3; i < array.Count; i+=2)
+                    for (var i = 3; i < array.Count; i += 2)
                     {
                         var filter = ParseProperty(array[i + 1]);
                         filterList.Add(filter);
                         var stop = ParseValue(array[i]);
-                        if (stop is not null)
-                        {
-                            stops.Add(stop);
-                        }
+                        if (stop is not null) stops.Add(stop);
                     }
 
                     var key = ParseProperty(array[1]);
@@ -362,14 +349,12 @@ public static class VectorMapStyleGL
                     return new StaticValueProperty(default);
                 }
             }
-            
-            
         }
-        
+
         {
             // New interpolation format
             // {"stops": [[0, "red"], [10, "blue"], [20, "green"]]}
-            var segments = new InterpolateProperty(InterpolateType.Linear, new ValueGetProperty{Key = "$zoom"});
+            var segments = new InterpolateProperty(InterpolateType.Linear, new ValueGetProperty { Key = "$zoom" });
             if (li["stops"] is not JArray stops) return segments;
             foreach (var stop in stops)
             {
@@ -384,7 +369,6 @@ public static class VectorMapStyleGL
 
             return segments;
         }
-
     }
 
     private static StaticValueProperty? ParseStaticValue(JToken token)
@@ -392,7 +376,7 @@ public static class VectorMapStyleGL
         var value = ParseValue(token);
         return value is null ? null : new StaticValueProperty(value);
     }
-    
+
     private static IConstValue? ParseValue(JToken value)
     {
         switch (value.Type)
@@ -402,30 +386,19 @@ public static class VectorMapStyleGL
                 var str = value.ToObject<string>();
                 if (str is null) return null;
                 if ((str.StartsWith("rgba") || str.StartsWith("rgb") || str.StartsWith("hsla") ||
-                     str.StartsWith("hsl") || str.StartsWith("#")) && TryParseColor(value.ToObject<string>(), out var color))
-                {
+                     str.StartsWith("hsl") || str.StartsWith("#")) &&
+                    TryParseColor(value.ToObject<string>(), out var color))
                     return new ConstColorValue(color);
-                }
 
-                
-                if (str is "true" or "false")
-                {
-                    return new ConstBoolValue(str == "true");
-                }
-                if (int.TryParse(str, out var intValue))
-                {
-                    return new ConstIntValue(intValue);
-                }
-                if (float.TryParse(str, out var floatValue))
-                {
-                    return new ConstFloatValue(floatValue);
-                }
+
+                if (str is "true" or "false") return new ConstBoolValue(str == "true");
+                if (int.TryParse(str, out var intValue)) return new ConstIntValue(intValue);
+                if (float.TryParse(str, out var floatValue)) return new ConstFloatValue(floatValue);
                 return new ConstStringValue(str);
             }
             case JTokenType.Float:
             {
                 return new ConstFloatValue(value.ToObject<float>());
-                
             }
             case JTokenType.Integer:
             {
@@ -453,30 +426,27 @@ public static class VectorMapStyleGL
             }
         }
     }
-    
+
     private static IStyleFilter? GetFilter(JArray token)
     {
         // new filter
-        if (token[1] is not JArray)
-        {
-            return GetOneFilter(token);
-        }
+        if (token[1] is not JArray) return GetOneFilter(token);
         var not = token[0].ToObject<string>() == "!";
-        
+
         // old filter
         var first = not ? token[1][0]!.ToObject<string>() : token[0].ToObject<string>();
-        
+
         if (first is not ("all" or "any" or "none" or "step"))
             return GetOneFilter(token);
-        
+
         // Handling !all
-        
+
         if (not)
         {
             token = (JArray)token[1];
             if (first == "all") first = "none";
         }
-        
+
         switch (first)
         {
             case "all" or "any" or "none":
@@ -487,18 +457,15 @@ public static class VectorMapStyleGL
                 {
                     var token1 = (JArray)token[i];
                     var filter = GetFilter(token1);
-                    if (filter is not null)
-                    {
-                        filterList.Add(filter);
-                    }
+                    if (filter is not null) filterList.Add(filter);
                 }
 
                 if (filterList.Count == 0) return FalseFilter.Instance;
-                
+
                 return first switch
                 {
-                    "all" => new AllFilter(filterList),  // All was true, return true.
-                    "any" => new AnyFilter(filterList),  // Any was true, return true.
+                    "all" => new AllFilter(filterList), // All was true, return true.
+                    "any" => new AnyFilter(filterList), // Any was true, return true.
                     "none" => new NoneFilter(filterList), // All was false, return true.
                     _ => null
                 };
@@ -509,16 +476,13 @@ public static class VectorMapStyleGL
                 List<IStyleFilter> filterList = new();
                 List<IConstValue> stops = new();
                 filterList.Add(GetFilter((JArray)token[2])!);
-                for (var i = 3; i < token.Count; i+=2)
+                for (var i = 3; i < token.Count; i += 2)
                 {
                     var filter = GetFilter((JArray)token[i + 1]);
                     if (filter is null) continue;
                     filterList.Add(filter);
                     var stop = ParseValue(token[i]);
-                    if (stop is not null)
-                    {
-                        stops.Add(stop);
-                    }
+                    if (stop is not null) stops.Add(stop);
                 }
 
                 var key = ParseProperty(token[1]);
@@ -536,7 +500,6 @@ public static class VectorMapStyleGL
             token = (JArray)token[1];
         var filterType = token[0].ToObject<string>();
         if (not)
-        {
             filterType = filterType switch
             {
                 "has" => "!has",
@@ -547,8 +510,7 @@ public static class VectorMapStyleGL
                 "!=" => "==",
                 _ => filterType
             }; // invert
-        }
-        
+
         switch (filterType)
         {
             case "==":
@@ -608,9 +570,9 @@ public static class VectorMapStyleGL
 
     private static string? GetKey(JToken jToken)
     {
-        var key = jToken is JArray keyToken ?
-            keyToken.Count > 1 ? 
-                keyToken[1].ToObject<string>() // ["get", "<key>"]
+        var key = jToken is JArray keyToken
+            ? keyToken.Count > 1
+                ? keyToken[1].ToObject<string>() // ["get", "<key>"]
                 : keyToken[0].ToObject<string>() switch
                 {
                     "geometry-type" => "$type",
@@ -629,15 +591,11 @@ public static class VectorMapStyleGL
         {
             var first = array[0];
             if (first.Type == JTokenType.String && first.ToObject<string>() == "literal")
-            {
                 // ["in", ["get", "vt_code"], ["literal", [5101, 5103]]]
                 values = array[1].Select(ParseValue);
-            }
             else
-            {
                 // ["in", ["get", "vt_code"], [5322, ...]]
                 values = array.Select(ParseValue);
-            }
         }
         else
         {

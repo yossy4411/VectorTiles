@@ -1,22 +1,21 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using VectorTiles.Styles.Values;
 
 namespace VectorTiles.Values;
 
 public readonly struct ConstColorValue : IConstValue
 {
     public object Value => _value;
-    
+
     private readonly Color _value;
-    
+
     public StyleConstValueType ValueType => StyleConstValueType.Color;
-    
+
     public ConstColorValue(Color value)
     {
         _value = value;
     }
-    
+
     public bool Equals(IConstValue? other)
     {
         if (other is null) return false;
@@ -26,7 +25,7 @@ public readonly struct ConstColorValue : IConstValue
             _ => false
         };
     }
-    
+
     public int CompareTo(IConstValue? other)
     {
         if (other is null) return 1;
@@ -36,25 +35,27 @@ public readonly struct ConstColorValue : IConstValue
             _ => 1
         };
     }
-    
+
     public IConstValue Add(IConstValue value)
     {
         return value.ValueType switch
         {
-            StyleConstValueType.Color => new ConstColorValue(Color.FromArgb(_value.ToArgb() + ((Color)value.Value).ToArgb())),
+            StyleConstValueType.Color => new ConstColorValue(
+                Color.FromArgb(_value.ToArgb() + ((Color)value.Value).ToArgb())),
             _ => this
         };
     }
-    
+
     public IConstValue Subtract(IConstValue value)
     {
         return value.ValueType switch
         {
-            StyleConstValueType.Color => new ConstColorValue(Color.FromArgb(_value.ToArgb() - ((Color)value.Value).ToArgb())),
+            StyleConstValueType.Color => new ConstColorValue(
+                Color.FromArgb(_value.ToArgb() - ((Color)value.Value).ToArgb())),
             _ => this
         };
     }
-    
+
     public IConstValue Multiply(IConstValue value)
     {
         return value.ValueType switch
@@ -74,29 +75,32 @@ public readonly struct ConstColorValue : IConstValue
             _ => this
         };
     }
-    
+
     public IConstValue Divide(IConstValue value)
     {
         return this;
     }
-    
+
     public IConstValue Modulo(IConstValue value)
     {
         return this;
     }
-    
+
     public override string ToString()
     {
         return _value.ToString();
     }
-    
-    public static implicit operator Color(ConstColorValue value) => value._value;
-    
+
+    public static implicit operator Color(ConstColorValue value)
+    {
+        return value._value;
+    }
+
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
         return obj is ConstColorValue value && Equals(value);
     }
-    
+
     public override int GetHashCode()
     {
         return _value.GetHashCode();

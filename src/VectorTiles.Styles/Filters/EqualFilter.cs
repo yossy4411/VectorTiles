@@ -4,26 +4,26 @@ using VectorTiles.Values;
 namespace VectorTiles.Styles.Filters;
 
 /// <summary>
-/// Check if a value is equal to a constant value
+///     Check if a value is equal to a constant value
 /// </summary>
 public class EqualFilter : IStyleFilter
 {
-    public IStyleProperty Key { get; init; }
-    public IConstValue Value { get; init; }
-
     public EqualFilter(IStyleProperty key, IConstValue value)
     {
         Key = key;
         Value = value;
     }
-    
+
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
         var value = Key.GetValue(values);
         return value?.Equals(Value) ?? false;
     }
-    
+
     public override string ToString()
     {
         return $"( {Key} == {Value} )";
@@ -31,7 +31,7 @@ public class EqualFilter : IStyleFilter
 }
 
 /// <summary>
-/// Check if a value is not equal to a constant value
+///     Check if a value is not equal to a constant value
 /// </summary>
 public class NotEqualFilter : IStyleFilter
 {
@@ -40,7 +40,10 @@ public class NotEqualFilter : IStyleFilter
         Key = key;
         Value = value;
     }
-    
+
+    public IStyleProperty Key { get; init; }
+    public IConstValue Value { get; init; }
+
     public bool Filter(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return false;
@@ -48,9 +51,6 @@ public class NotEqualFilter : IStyleFilter
         return !value?.Equals(Value) ?? false;
     }
 
-    public IStyleProperty Key { get; init; }
-    public IConstValue Value { get; init; }
-    
     public override string ToString()
     {
         return $"( {Key} != {Value} )";
