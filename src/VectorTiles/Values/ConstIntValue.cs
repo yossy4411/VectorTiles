@@ -94,6 +94,8 @@ public readonly struct ConstIntValue : IConstValue
     }
     
     public static implicit operator int(ConstIntValue value) => value._value;
+    
+    public static implicit operator float(ConstIntValue value) => value._value;
 
     public override bool Equals([NotNullWhen(true)] object? obj)
     {

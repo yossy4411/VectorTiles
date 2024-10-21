@@ -28,9 +28,9 @@ public class StyleProperty<T>
     public T? GetValue(Dictionary<string, IConstValue?>? values = null)
     {
         var value = Property.GetValue(values);
-        if (value is T tValue)
+        if (value is not null)
         {
-            return tValue;
+            return (T)Convert.ChangeType(value.Value, typeof(T));
         }
         return default;
     }

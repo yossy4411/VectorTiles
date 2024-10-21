@@ -26,12 +26,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="UnitTest1.cs">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="basic.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
