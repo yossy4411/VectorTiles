@@ -311,16 +311,24 @@ public static class VectorMapStyleGL
                 {
                     // ["match", ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
                     var key = ParseProperty(array[1]);
-                    var cases = new List<(IConstValue, IConstValue)>();
+                    var cases = new List<(IConstValue[], IConstValue)>();
                     for (var i = 2; i < array.Count - 1; i += 2)
                     {
                         var value = array[i];
-                        var valProp = ParseValue(value);
+                        IConstValue[] caseProp;
+                        if (value is JValue)
+                        {
+                            var caseValue = ParseValue(value);
+                            if (caseValue is null) continue;
+                            caseProp = new[] {caseValue};
+                        }
+                        else
+                            caseProp = value.Select(ParseValue).OfType<IConstValue>().ToArray();
                         var result = array[i + 1];
                         var resultProp = ParseValue(result);
-                        if (valProp is not null && resultProp is not null)
+                        if (resultProp is not null)
                         {
-                            cases.Add((valProp, resultProp));
+                            cases.Add((caseProp, resultProp));
                         }
                     }
                     var defaultProp = ParseValue(array[array.Count - 1]);
