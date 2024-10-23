@@ -9,7 +9,7 @@ using VectorTiles.Values;
 
 namespace VectorTiles.Styles.MapboxGL;
 
-public static class VectorMapStyleGL
+public static class MapboxStyle
 {
     public static VectorMapStyle LoadGLJson(string text)
     {

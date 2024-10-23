@@ -14,7 +14,7 @@ public class StyleJsonTests
     public async Task Setup()
     {
         var text = await File.ReadAllTextAsync("basic.json"); // Read the JSON file
-        _style = VectorMapStyleGL.LoadGLJson(text);
+        _style = MapboxStyle.LoadGLJson(text);
     }
 
     [Test]
