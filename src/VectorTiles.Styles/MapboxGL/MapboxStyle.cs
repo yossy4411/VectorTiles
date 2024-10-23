@@ -47,6 +47,44 @@ public static class MapboxStyle
         };
     }
 
+    public static VectorMapStyle LoadGLJson(Stream stream)
+    {
+        using var reader = new StreamReader(stream);
+        using var jsonReader = new JsonTextReader(reader);
+        var jObject = JObject.Load(jsonReader);
+        if (jObject?["layers"] is not JArray layers) return new VectorMapStyle();
+        var layersList = layers.Select(NewLayer).OfType<VectorMapStyleLayer>().ToList();
+        var name = jObject["name"]?.ToObject<string>();
+        if (jObject["sources"] is not JObject sources)
+            return new VectorMapStyle
+            {
+                Name = name,
+                Layers = layersList
+            };
+        List<VectorMapSource> sourceList = new();
+
+        foreach (var (_, value) in sources)
+        {
+            if (value is not JObject) continue;
+            var source = new VectorMapSource
+            {
+                Type = value["type"]?.ToObject<string>() ?? "vector",
+                MinZoom = value["minzoom"]?.ToObject<uint>() ?? 0,
+                MaxZoom = value["maxzoom"]?.ToObject<uint>() ?? 22,
+                Url = value["tiles"]?.FirstOrDefault()?.ToObject<string>(),
+                Attribution = value["attribution"]?.ToObject<string>()
+            };
+            sourceList.Add(source);
+        }
+
+        return new VectorMapStyle
+        {
+            Name = name,
+            Layers = layersList,
+            Sources = sourceList
+        };
+    }
+
     /// <summary>
     ///     Parse color
     /// </summary>
