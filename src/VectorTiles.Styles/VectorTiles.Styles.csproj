@@ -4,7 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
-        <PackageId>Okayu.VectorTiles.Core</PackageId>
+        <PackageId>Okayu.VectorTiles.Styles</PackageId>
         <Version>0.1.0</Version>
         <Copyright>Copyright (c) 2024 Okayu Group</Copyright>
         <RepositoryUrl>https://github.com/yossy4411/VectorTiles</RepositoryUrl>
@@ -15,6 +15,13 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\VectorTiles\VectorTiles.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    </ItemGroup>
 
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>

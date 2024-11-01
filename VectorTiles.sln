@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorTiles", "src\VectorTiles\VectorTiles.csproj", "{94ACCBBE-36DB-49F9-B007-F879D44C4B97}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorTiles.Styles", "src\VectorTiles.Styles\VectorTiles.Styles.csproj", "{32FED788-4240-4986-A890-B9805291C4BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorTiles.Test", "test\VectorTiles.Test\VectorTiles.Test.csproj", "{9CAADCAE-536D-481E-BC65-ABA12BC43E91}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,13 @@ Global
 		{94ACCBBE-36DB-49F9-B007-F879D44C4B97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94ACCBBE-36DB-49F9-B007-F879D44C4B97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94ACCBBE-36DB-49F9-B007-F879D44C4B97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32FED788-4240-4986-A890-B9805291C4BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32FED788-4240-4986-A890-B9805291C4BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32FED788-4240-4986-A890-B9805291C4BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32FED788-4240-4986-A890-B9805291C4BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CAADCAE-536D-481E-BC65-ABA12BC43E91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CAADCAE-536D-481E-BC65-ABA12BC43E91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CAADCAE-536D-481E-BC65-ABA12BC43E91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CAADCAE-536D-481E-BC65-ABA12BC43E91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
