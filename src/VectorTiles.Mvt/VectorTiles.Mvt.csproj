@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\VectorTiles\VectorTiles.csproj" />
+      <ProjectReference Include="..\VectorTiles\VectorTiles.csproj" />
     </ItemGroup>
 
 </Project>
