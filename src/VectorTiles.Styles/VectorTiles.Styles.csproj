@@ -13,14 +13,12 @@
         <Authors>yossy4411</Authors>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Description>A library to read Mapbox Style Json</Description>
     </PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\VectorTiles\VectorTiles.csproj" />
-    </ItemGroup>
-
+    
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Okayu.VectorTiles.Core" Version="0.1.0" />
     </ItemGroup>
 
     <ItemGroup>

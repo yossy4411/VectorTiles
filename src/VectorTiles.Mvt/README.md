@@ -4,7 +4,7 @@ This package provides a Reader for Mapbox Vector Tiles (MVT).
 
 ## Installation
 
-~~NuGet package: [Okayu.VectorTiles.Mvt](https://www.nuget.org/packages/Okayu.VectorTiles.Mvt/)~~
+NuGet package: [Okayu.VectorTiles.Mvt](https://www.nuget.org/packages/Okayu.VectorTiles.Mvt/)
 
 ## Usage
 

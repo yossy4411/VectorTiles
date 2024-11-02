@@ -24,8 +24,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\VectorTiles.Mvt\VectorTiles.Mvt.csproj" />
         <ProjectReference Include="..\..\src\VectorTiles.Styles\VectorTiles.Styles.csproj"/>
-        <ProjectReference Include="..\..\VectorTiles.Mvt\VectorTiles.Mvt.csproj" />
     </ItemGroup>
 
     <ItemGroup>

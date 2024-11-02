@@ -13,6 +13,7 @@
         <Authors>yossy4411</Authors>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Description>Core library of Okayu.VectorTiles</Description>
     </PropertyGroup>
 
 

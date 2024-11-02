@@ -13,14 +13,16 @@
         <Authors>yossy4411</Authors>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Description>A library to read Mapbox Vector Tiles (MVT).</Description>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Google.Protobuf" Version="3.28.3" />
+      <PackageReference Include="Okayu.VectorTiles.Core" Version="0.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\VectorTiles\VectorTiles.csproj" />
+        <None Include="README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>
