@@ -1,34 +1,39 @@
 using Google.Protobuf;
+using VectorTiles.Styles;
 using VectorTiles.Values;
 
 namespace VectorTiles.Mvt;
 
 public static class MapboxTileReader
 {
-    public static MapboxTile Read(Stream stream, int tileZ, int tileX, int tileY)
+    public static MapboxTile Read(Stream stream, int tileZ, int tileX, int tileY, VectorMapStyle? style = null)
     {
         var tile = new Tile();
         tile.MergeFrom(stream);
-        return ToMapboxTile(tile, tileZ, tileX, tileY);
+        return ToMapboxTile(tile, tileZ, tileX, tileY, style);
     }
     
-    public static MapboxTile Read(byte[] data, int tileZ, int tileX, int tileY)
+    public static MapboxTile Read(byte[] data, int tileZ, int tileX, int tileY, VectorMapStyle? style)
     {
         using var stream = new MemoryStream(data);
-        return Read(stream, tileZ, tileX, tileY);
+        return Read(stream, tileZ, tileX, tileY, style);
     }
     
-    public static MapboxTile Read(string path, int tileZ, int tileX, int tileY)
+    public static MapboxTile Read(string path, int tileZ, int tileX, int tileY, VectorMapStyle? style)
     {
         using var stream = File.OpenRead(path);
-        return Read(stream, tileZ, tileX, tileY);
+        return Read(stream, tileZ, tileX, tileY, style);
     }
     
-    private static MapboxTile ToMapboxTile(Tile tile, int tileZ, int tileX, int tileY)
+    private static MapboxTile ToMapboxTile(Tile tile, int tileZ, int tileX, int tileY, VectorMapStyle? style)
     {
         var layers = new List<MapboxTile.Layer>();
         foreach (var layer in tile.Layers)
         {
+            if (style is not null && style.Layers.All(x => x.MaxZoom < tileZ || x.MinZoom > tileZ || x.Source != layer.Name))
+            {
+                continue;
+            }
             var extent = layer.Extent;
             var constValues = layer.Values.Select(GetKeyValues).OfType<IConstValue>().ToList();
             var features = new List<MapboxTile.Layer.Feature>();
