@@ -337,8 +337,10 @@ public static class MapboxStyle
                     var type = array[1][0]?.ToObject<string>() switch
                     {
                         "linear" => InterpolateType.Linear,
+                        "exponential" => InterpolateType.Exponential,
                         _ => InterpolateType.Linear
                     };
+                    // var args = type is not InterpolateType.Exponential ? null : array[1][1]; // factor key
                     var key = ParseProperty(array[2]);
                     var segments = new InterpolateProperty(type, key);
 
