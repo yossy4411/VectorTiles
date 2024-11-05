@@ -4,16 +4,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
-        <PackageId>Okayu.VectorTiles.Core</PackageId>
-        <Version>0.1.0</Version>
-        <Copyright>Copyright (c) 2024 Okayu Group</Copyright>
-        <RepositoryUrl>https://github.com/yossy4411/VectorTiles</RepositoryUrl>
-        <RepositoryType>GitHub</RepositoryType>
-        <PackageTags>Mapbox</PackageTags>
-        <Authors>yossy4411</Authors>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Description>Core library of Okayu.VectorTiles</Description>
     </PropertyGroup>
 
 
