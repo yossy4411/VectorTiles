@@ -56,6 +56,7 @@ public static class MapboxTileReader
                     _ => MapboxTile.Layer.Feature.FeatureType.Unknown
                 };
                 var j = 0;
+                int x1 = 0, y1 = 0; 
                 while (j < feature.Geometry.Count)
                 {
                     var geometry = feature.Geometry[j];
@@ -71,31 +72,13 @@ public static class MapboxTileReader
                                 geometries.Add(newGeometry);
                                 newGeometry = new MapboxTile.Layer.Feature.Geometry();  // Reset
                             }
-                            for (var k = 0; k < count; k++)
-                            {
-                                ExtractPoint(feature, j, extent, tileZ, tileX, tileY, out var x, out var y);
-                                newGeometry.Points.Add(new MapboxTile.Layer.Feature.Geometry.Point
-                                {
-                                    Lon = x,
-                                    Lat = y
-                                });
-                                j += 2;
-                            }
+                            AddOval(tileZ, tileX, tileY, count, feature, ref j, extent, newGeometry, ref x1, ref y1);
                             break;
                         }
                         case 2:
                         {
                             // LineTo
-                            for (var k = 0; k < count; k++)
-                            {
-                                ExtractPoint(feature, j, extent, tileZ, tileX, tileY, out var x, out var y);
-                                newGeometry.Points.Add(new MapboxTile.Layer.Feature.Geometry.Point
-                                {
-                                    Lon = x,
-                                    Lat = y
-                                });
-                                j += 2;
-                            }
+                            AddOval(tileZ, tileX, tileY, count, feature, ref j, extent, newGeometry, ref x1, ref y1);
                             break;
                         }
                         case 7:
@@ -127,15 +110,33 @@ public static class MapboxTileReader
         };
     }
 
-    private static void ExtractPoint(Tile.Types.Feature feature, int j, uint extent, int tileZ, int tileX, int tileY, out float lon, out float lat)
+    private static void AddOval(int tileZ, int tileX, int tileY, uint count, Tile.Types.Feature feature, ref int j, uint extent,
+        MapboxTile.Layer.Feature.Geometry newGeometry, ref int x1, ref int y1)
     {
-        var x = ZigZagDecode(feature.Geometry[j + 1]);
-        var y = ZigZagDecode(feature.Geometry[j + 2]);
         
-        // Convert tile coordinates to longitude and latitude
-        lon = (float)((tileX + (x / (double)extent)) * 360.0 / (1 << tileZ) - 180.0);
-        lat = (float)(Math.Atan(Math.Sinh(Math.PI * (1 - 2 * (tileY + (y / (double)extent)) / (1 << tileZ)))) * 180.0 / Math.PI);
+        double tileSize = extent * Math.Pow(2, tileZ); // タイル全体のサイズ
+    
+        for (var k = 0; k < count; k++)
+        {
+            x1 += ZigZagDecode(feature.Geometry[j + 1]);
+            y1 += ZigZagDecode(feature.Geometry[j + 2]);
+        
+            double worldX = (tileX * extent + x1) / tileSize;
+            double worldY = (tileY * extent + y1) / tileSize;
+        
+            // タイル座標から緯度経度に変換
+            var lon = worldX * 360.0 - 180.0;
+            var lat = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * worldY))) * 180.0 / Math.PI;
+        
+            newGeometry.Points.Add(new MapboxTile.Layer.Feature.Geometry.Point
+            {
+                Lon = lon,
+                Lat = lat
+            });
+            j += 2;
+        }
     }
+
 
     private static int ZigZagDecode(uint n)
     {
