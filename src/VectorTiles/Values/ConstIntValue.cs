@@ -86,6 +86,16 @@ public readonly struct ConstIntValue : IConstValue
             _ => this
         };
     }
+    
+    public IConstValue Pow(IConstValue value)
+    {
+        return value.ValueType switch
+        {
+            StyleConstValueType.Int => new ConstIntValue((int)Math.Pow(_value, (int)value.Value)),
+            StyleConstValueType.Float => new ConstFloatValue((float)Math.Pow(_value, (float)value.Value)),
+            _ => this
+        };
+    }
 
     public override string ToString()
     {

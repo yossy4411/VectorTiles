@@ -12,6 +12,7 @@ public interface IConstValue
     IConstValue Multiply(IConstValue value);
     IConstValue Divide(IConstValue value);
     IConstValue Modulo(IConstValue value);
+    IConstValue Pow(IConstValue value);
 }
 
 public enum StyleConstValueType

@@ -74,6 +74,11 @@ public readonly struct ConstBoolValue : IConstValue
     {
         return this;
     }
+    
+    public IConstValue Pow(IConstValue value)
+    {
+        return this;
+    }
 
     public override string ToString()
     {

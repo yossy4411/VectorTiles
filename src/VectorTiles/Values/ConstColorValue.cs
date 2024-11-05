@@ -85,6 +85,11 @@ public readonly struct ConstColorValue : IConstValue
     {
         return this;
     }
+    
+    public IConstValue Pow(IConstValue value)
+    {
+        return this;
+    }
 
     public override string ToString()
     {
