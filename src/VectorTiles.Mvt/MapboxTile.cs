@@ -14,7 +14,7 @@ public class MapboxTile
         public class Feature
         {
             public List<Geometry> Geometries { get; set; } = new();
-            public Dictionary<string, IConstValue> Tags { get; set; } = new();
+            public Dictionary<string, IConstValue?> Tags { get; set; } = new();
             public enum FeatureType
             {
                 Unknown = 0,

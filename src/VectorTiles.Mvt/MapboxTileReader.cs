@@ -35,11 +35,11 @@ public static class MapboxTileReader
                 continue;
             }
             var extent = layer.Extent;
-            var constValues = layer.Values.Select(GetKeyValues).OfType<IConstValue>().ToList();
+            var constValues = layer.Values.Select(GetKeyValues).ToList();
             var features = new List<MapboxTile.Layer.Feature>();
             foreach (var feature in layer.Features)
             {
-                var values = new Dictionary<string, IConstValue>();
+                var values = new Dictionary<string, IConstValue?>();
                 for (var k = 0; k < feature.Tags.Count; k += 2)
                 {
                     var key = layer.Keys[(int)feature.Tags[k]];
