@@ -296,6 +296,41 @@ public static class MapboxStyle
                     var value = ParseProperty(array[2]);
                     return new ModuloProperty(key, value);
                 }
+                case "+":
+                {
+                    // ["+", ["get", "vt_code"], 10]
+                    var key = ParseProperty(array[1]);
+                    var value = ParseProperty(array[2]);
+                    return new PlusProperty(key, value);
+                }
+                case "-":
+                {
+                    // ["-", ["get", "vt_code"], 10]
+                    var key = ParseProperty(array[1]);
+                    var value = ParseProperty(array[2]);
+                    return new MinusProperty(key, value);
+                }
+                case "*":
+                {
+                    // ["*", ["get", "vt_code"], 10]
+                    var key = ParseProperty(array[1]);
+                    var value = ParseProperty(array[2]);
+                    return new MultiplyProperty(key, value);
+                }
+                case "/":
+                {
+                    // ["/", ["get", "vt_code"], 10]
+                    var key = ParseProperty(array[1]);
+                    var value = ParseProperty(array[2]);
+                    return new DivideProperty(key, value);
+                }
+                case "^":
+                {
+                    // ["^", ["get", "vt_code"], 10]
+                    var key = ParseProperty(array[1]);
+                    var value = ParseProperty(array[2]);
+                    return new PowerProperty(key, value);
+                }
                 case "interpolate":
                 {
                     // ["interpolate", ["linear"], ["zoom"], 0, 0, 22, 1] or ["interpolate", ["linear"], ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
