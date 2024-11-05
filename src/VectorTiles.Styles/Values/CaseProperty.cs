@@ -8,24 +8,24 @@ namespace VectorTiles.Styles.Values;
 /// </summary>
 public class CaseProperty : IStyleProperty
 {
-    public CaseProperty(List<(IStyleFilter Filter, IConstValue Property)> cases, IConstValue @default)
+    public CaseProperty(List<(IStyleFilter Filter, IStyleProperty Property)> cases, IStyleProperty @default)
     {
         Cases = cases;
         Default = @default;
     }
 
-    public List<(IStyleFilter Filter, IConstValue Property)> Cases { get; }
-    public IConstValue Default { get; }
+    public List<(IStyleFilter Filter, IStyleProperty Property)> Cases { get; }
+    public IStyleProperty Default { get; }
 
-    public IConstValue GetValue(Dictionary<string, IConstValue?>? values = null)
+    public IConstValue? GetValue(Dictionary<string, IConstValue?>? values = null)
     {
-        if (values is null) return Default;
+        if (values is null) return Default.GetValue(values);
 
         foreach (var (filter, property) in Cases)
             if (filter.Filter(values))
-                return property;
+                return property.GetValue(values);
 
-        return Default;
+        return Default.GetValue(values);
     }
 
     public override string ToString()

@@ -7,7 +7,7 @@ namespace VectorTiles.Styles.Values;
 /// </summary>
 public class MatchProperty : IStyleProperty
 {
-    public MatchProperty(IStyleProperty key, List<(IConstValue[], IConstValue)> values, IConstValue defaultValue)
+    public MatchProperty(IStyleProperty key, List<(IConstValue[], IStyleProperty)> values, IStyleProperty defaultValue)
     {
         Key = key;
         Values = values;
@@ -15,17 +15,17 @@ public class MatchProperty : IStyleProperty
     }
 
     public IStyleProperty Key { get; init; }
-    public List<(IConstValue[], IConstValue)> Values { get; init; }
+    public List<(IConstValue[], IStyleProperty)> Values { get; init; }
 
-    public IConstValue DefaultValue { get; init; }
+    public IStyleProperty DefaultValue { get; init; }
 
     public IConstValue? GetValue(Dictionary<string, IConstValue?>? values)
     {
         if (values is null) return null;
         var value = Key.GetValue(values);
-        foreach (var v in Values.Where(v => v.Item1.Any(a => a.Equals(value)))) return v.Item2;
+        foreach (var v in Values.Where(v => v.Item1.Any(a => a.Equals(value)))) return v.Item2.GetValue(values);
 
-        return DefaultValue;
+        return DefaultValue.GetValue(values);
     }
 
     public override string ToString()
