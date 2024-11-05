@@ -31,6 +31,6 @@ public class MatchProperty : IStyleProperty
     public override string ToString()
     {
         return
-            $"( {Key} MATCH {string.Join(", ", Values.Select(v => $"({string.Join<IConstValue>(", ", v.Item1)} -> {v.Item2})"))} )";
+            $"( {Key} MATCH {string.Join(", ", Values.Select(v => $"({string.Join<IConstValue>(", ", v.Item1)} THEN {v.Item2})"))} DEFAULT {DefaultValue} END )";
     }
 }

@@ -62,7 +62,8 @@ public class InterpolateProperty : IStyleProperty
 
     public override string ToString()
     {
-        return $"(INTERPOLATE {_key} WITH {string.Join(", ", _segments)} )";
+        var type = _type == InterpolateType.Exponential ? "EXPONENTIAL" : "LINEAR";
+        return $"({type} INTERPOLATE {_key} WITH {string.Join(", ", _segments)} )";
     }
 }
 

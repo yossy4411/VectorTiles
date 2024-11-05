@@ -18,7 +18,7 @@ public class HasFilter : IStyleFilter
 
     public override string ToString()
     {
-        return $"( !HAS {Key} )";
+        return $"( HAS {Key} )";
     }
 }
 
