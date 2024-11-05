@@ -224,7 +224,7 @@ public static class MapboxStyle
             {
                 var layoutToken = jToken["layout"];
                 var textSize = ParseProperty(layoutToken?["text-size"]).Wrap<float>();
-                var textColor = ParseProperty(layoutToken?["text-color"]).Wrap<Color>();
+                var textColor = ParseProperty(jToken["paint"]?["text-color"]).Wrap<Color>();
                 var fieldToken = layoutToken?["text-field"];
                 var field = fieldToken is JArray
                     ? fieldToken[1]?.ToObject<string>()
@@ -280,8 +280,10 @@ public static class MapboxStyle
             switch (array[0].ToObject<string>())
             {
                 case "get":
+                case "var":
                 {
                     // ["get", "<key>"]
+                    // ["var", "<key>"]  (nearly equal to get)
                     var key = array[1].ToObject<string>();
                     var property = new ValueGetProperty
                     {
@@ -358,17 +360,16 @@ public static class MapboxStyle
                 case "case":
                 {
                     // ["case", ["==", ["get", "vt_code"], 5322], "red", ["==", ["get", "vt_code"], 5323], "blue", "green"]
-                    var cases = new List<(IStyleFilter, IConstValue)>();
+                    var cases = new List<(IStyleFilter, IStyleProperty)>();
                     for (var i = 1; i < array.Count - 1; i += 2)
                     {
                         var filter = GetFilter((JArray)array[i]);
                         var value = array[i + 1];
-                        var valProp = ParseValue(value);
-                        if (filter is not null && valProp is not null) cases.Add((filter, valProp));
+                        var valProp = ParseProperty(value);
+                        if (filter is not null) cases.Add((filter, valProp));
                     }
 
-                    var defaultProp = ParseValue(array[array.Count - 1]);
-                    if (defaultProp is null) return new StaticValueProperty(default);
+                    var defaultProp = ParseProperty(array[array.Count - 1]);
                     return new CaseProperty(cases, defaultProp);
                 }
 
@@ -376,7 +377,7 @@ public static class MapboxStyle
                 {
                     // ["match", ["get", "vt_code"], 5322, "red", 5323, "blue", "green"]
                     var key = ParseProperty(array[1]);
-                    var cases = new List<(IConstValue[], IConstValue)>();
+                    var cases = new List<(IConstValue[], IStyleProperty)>();
                     for (var i = 2; i < array.Count - 1; i += 2)
                     {
                         var value = array[i];
@@ -393,12 +394,11 @@ public static class MapboxStyle
                         }
 
                         var result = array[i + 1];
-                        var resultProp = ParseValue(result);
-                        if (resultProp is not null) cases.Add((caseProp, resultProp));
+                        var resultProp = ParseProperty(result);
+                        cases.Add((caseProp, resultProp));
                     }
 
-                    var defaultProp = ParseValue(array[array.Count - 1]);
-                    if (defaultProp is null) return new StaticValueProperty(default);
+                    var defaultProp = ParseProperty(array[array.Count - 1]);
                     return new MatchProperty(key, cases, defaultProp);
                 }
 
