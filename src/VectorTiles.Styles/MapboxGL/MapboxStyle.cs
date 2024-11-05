@@ -417,6 +417,21 @@ public static class MapboxStyle
                     var key = ParseProperty(array[1]);
                     return new StepProperty(filterList, stops, key);
                 }
+
+                case "let":
+                {
+                    // ["let", "color", ["get", "vt_code"], "size", 10, ["var", "color"]]
+                    var variables = new List<(string, IStyleProperty)>();
+                    for (var i = 1; i < array.Count - 1; i += 2)
+                    {
+                        var key = array[i].ToObject<string>();
+                        if (key is null) continue;
+                        var value = ParseProperty(array[i + 1]);
+                        variables.Add((key, value));
+                    }
+                    var finalValue = ParseProperty(array[array.Count - 1]);
+                    return new LetProperty(variables, finalValue);
+                }
                 default:
                 {
                     return new StaticValueProperty(default);
