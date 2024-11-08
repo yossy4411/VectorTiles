@@ -9,55 +9,76 @@ public class InterpolateProperty : IStyleProperty
 {
     private readonly IStyleProperty? _key;
 
-    private readonly List<InterpolateSegment> _segments;
+    private readonly List<(float, IStyleProperty)> _segments;
     private readonly InterpolateType _type;
+    private readonly float _factor;
 
-    public InterpolateProperty(InterpolateType type, IStyleProperty? key, List<InterpolateSegment>? segments = null)
+    public InterpolateProperty(InterpolateType type, IStyleProperty? key, List<(float, IStyleProperty)>? segments = null, float factor = 1)
     {
-        _segments = segments ?? new List<InterpolateSegment>();
+        _segments = segments ?? new List<(float, IStyleProperty)>();
         _type = type;
         _key = key;
+        _factor = factor;
     }
 
     public IConstValue? GetValue(Dictionary<string, IConstValue?>? values = null)
     {
         if (values is null) return default;
         var zoomValue = _key?.GetValue(values);
-        if (zoomValue is not ConstFloatValue zoom) return default;
-
+        if (zoomValue is not ConstFloatValue zoomValue2) return default;
+        float zoom = zoomValue2;
         switch (_type)
         {
             case InterpolateType.Exponential:
             {
-                // todo: Implement exponential interpolation
-                if (_segments.Count == 1) return _segments[0].Value.GetValue(values);
+                if (_segments.Count == 1) return _segments[0].Item2.GetValue(values);
                 
-                if (zoom < _segments[0].Zoom) return _segments[0].Value.GetValue(values);
-                if (zoom >= _segments[^1].Zoom) return _segments[^1].Value.GetValue(values);
+                if (zoom < _segments[0].Item1) return _segments[0].Item2.GetValue(values);
+                if (zoom >= _segments[^1].Item1) return _segments[^1].Item2.GetValue(values);
                 
-                var (a, (zoomB, valueB)) =
-                    _segments.Zip(_segments.Skip(1)).First(x => x.First.Zoom <= zoom && zoom < x.Second.Zoom);
-                var rate = (zoom - a.Zoom) / (zoomB - a.Zoom);
-                return a.Interpolate(values, valueB, rate);
+                for (var i = 0; i < _segments.Count - 1; i++)
+                {
+                    var (za, a) = _segments[i];
+                    var (zb, b) = _segments[i + 1];
+                    if (!(za <= zoom) || !(zoom < zb)) continue;
+                    var rate = (zoom - za) / (zb - za);
+                    var thisValue = a.GetValue(values);
+                    var otherValue = b.GetValue(values);
+
+                    if (thisValue is null || otherValue is null) return null;
+                    return thisValue.Multiply(new ConstFloatValue(MathF.Pow(1 - rate, _factor))).Add(otherValue.Multiply(new ConstFloatValue(
+                        MathF.Pow(rate, _factor))));
+                }
+                return null;
             }
             case InterpolateType.Linear:
             default:
             {
-                if (_segments.Count == 1) return _segments[0].Value.GetValue(values);
-                if (zoom < _segments[0].Zoom) return _segments[0].Value.GetValue(values);
-                if (zoom >= _segments[^1].Zoom) return _segments[^1].Value.GetValue(values);
+                if (_segments.Count == 1) return _segments[0].Item2.GetValue(values);
                 
-                var (a, (zoomB, valueB)) =
-                    _segments.Zip(_segments.Skip(1)).First(x => x.First.Zoom <= zoom && zoom < x.Second.Zoom);
-                var rate = (zoom - a.Zoom) / (zoomB - a.Zoom);
-                return a.Interpolate(values, valueB, rate);
+                if (zoom < _segments[0].Item1) return _segments[0].Item2.GetValue(values);
+                if (zoom >= _segments[^1].Item1) return _segments[^1].Item2.GetValue(values);
+                
+                for (var i = 0; i < _segments.Count - 1; i++)
+                {
+                    var (za, a) = _segments[i];
+                    var (zb, b) = _segments[i + 1];
+                    if (!(za <= zoom) || !(zoom < zb)) continue;
+                    var rate = (zoom - za) / (zb - za);
+                    var thisValue = a.GetValue(values);
+                    var otherValue = b.GetValue(values);
+
+                    if (thisValue is null || otherValue is null) return null;
+                    return thisValue.Add(otherValue.Subtract(thisValue).Multiply(new ConstFloatValue(rate)));
+                }
+                return null;
             }
         }
     }
 
-    public void Add(InterpolateSegment segment)
+    public void Add(float zoom, IStyleProperty prop)
     {
-        _segments.Add(segment);
+        _segments.Add((zoom, prop));
     }
 
     public override string ToString()

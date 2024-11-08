@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using VectorTiles.Styles.Filters;
 using VectorTiles.Styles.Values;
 using VectorTiles.Values;
+// ReSharper disable UseIndexFromEndExpression
 
 namespace VectorTiles.Styles.MapboxGL;
 
@@ -351,8 +352,7 @@ public static class MapboxStyle
                         var zoom = array[i].ToObject<float>();
                         var value = array[i + 1];
                         var valProp = ParseProperty(value);
-                        var seg = new InterpolateSegment(zoom, valProp);
-                        segments.Add(seg);
+                        segments.Add(zoom, valProp);
                     }
 
                     return segments;
@@ -453,8 +453,7 @@ public static class MapboxStyle
                 var zoom = token[0].ToObject<float>();
                 var value = token[1];
                 var valProp = ParseProperty(value);
-                var seg = new InterpolateSegment(zoom, valProp);
-                segments.Add(seg);
+                segments.Add(zoom, valProp);
             }
 
             return segments;
