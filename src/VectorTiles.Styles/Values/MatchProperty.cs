@@ -23,7 +23,13 @@ public class MatchProperty : IStyleProperty
     {
         if (values is null) return null;
         var value = Key.GetValue(values);
-        foreach (var v in Values.Where(v => v.Item1.Any(a => a.Equals(value)))) return v.Item2.GetValue(values);
+        foreach (var (key, property) in Values)
+        {
+            if (key.Any(constValue => constValue.Equals(value)))
+            {
+                return property.GetValue(values);
+            }
+        }
 
         return DefaultValue.GetValue(values);
     }

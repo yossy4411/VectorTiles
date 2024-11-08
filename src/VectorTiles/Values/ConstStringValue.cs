@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace VectorTiles.Values;
 
 public class ConstStringValue : IConstValue
@@ -70,6 +72,26 @@ public class ConstStringValue : IConstValue
     public override string ToString()
     {
         return _value;
+    }
+    
+    public int ToInt()
+    {
+        return int.Parse(_value);
+    }
+    
+    public float ToFloat()
+    {
+        return float.Parse(_value);
+    }
+    
+    public bool ToBool()
+    {
+        return bool.Parse(_value);
+    }
+    
+    public Color ToColor()
+    {
+        return Color.FromName(_value);
     }
 
     public static implicit operator string(ConstStringValue value)

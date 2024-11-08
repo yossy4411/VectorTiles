@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace VectorTiles.Values;
 
 public interface IConstValue
@@ -7,6 +9,10 @@ public interface IConstValue
     bool Equals(IConstValue? other);
     int CompareTo(IConstValue? other);
     string ToString();
+    int ToInt();
+    float ToFloat();
+    bool ToBool();
+    Color ToColor();
     IConstValue Add(IConstValue value);
     IConstValue Subtract(IConstValue value);
     IConstValue Multiply(IConstValue value);

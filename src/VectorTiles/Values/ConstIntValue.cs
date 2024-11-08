@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 
 namespace VectorTiles.Values;
 
@@ -100,6 +101,26 @@ public readonly struct ConstIntValue : IConstValue
     public override string ToString()
     {
         return _value.ToString();
+    }
+    
+    public int ToInt()
+    {
+        return _value;
+    }
+    
+    public float ToFloat()
+    {
+        return _value;
+    }
+    
+    public bool ToBool()
+    {
+        return _value != 0;
+    }
+    
+    public Color ToColor()
+    {
+        return Color.FromArgb(_value);
     }
 
     public static implicit operator int(ConstIntValue value)

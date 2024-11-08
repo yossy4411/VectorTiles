@@ -35,7 +35,7 @@ public abstract class VectorMapStyleLayer
 public class VectorBackgroundStyleLayer
     : VectorMapStyleLayer
 {
-    public StyleProperty<Color>? BackgroundColor { get; init; }
+    public IStyleProperty? BackgroundColor { get; init; }
 }
 
 public class VectorFillStyleLayer : VectorMapStyleLayer
@@ -44,7 +44,7 @@ public class VectorFillStyleLayer : VectorMapStyleLayer
     {
     }
 
-    public StyleProperty<Color>? FillColor { get; init; }
+    public IStyleProperty? FillColor { get; init; }
 }
 
 /// <summary>
@@ -56,7 +56,7 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
     {
     }
 
-    public StyleProperty<float>? LineWidth { get; init; }
+    public IStyleProperty? LineWidth { get; init; }
 
     /// <summary>
     ///     Pattern of dashes and gaps to be used when drawing lines.
@@ -67,7 +67,7 @@ public class VectorLineStyleLayer : VectorMapStyleLayer
     /// </remarks>
     public virtual float[]? DashArray { get; init; }
 
-    public StyleProperty<Color>? LineColor { get; init; }
+    public IStyleProperty? LineColor { get; init; }
 }
 
 /// <summary>
@@ -81,19 +81,19 @@ public class VectorSymbolStyleLayer : VectorMapStyleLayer
 
     public string? IconImage { get; init; }
 
-    public StyleProperty<float>? IconSize { get; init; }
+    public IStyleProperty? IconSize { get; init; }
 
-    public StyleProperty<Color>? IconColor { get; init; }
+    public IStyleProperty? IconColor { get; init; }
 
-    public StyleProperty<float>? IconOpacity { get; init; }
+    public IStyleProperty? IconOpacity { get; init; }
 
-    public StyleProperty<float>? IconRotate { get; init; }
+    public IStyleProperty? IconRotate { get; init; }
 
-    public StyleProperty<float>? TextSize { get; init; }
+    public IStyleProperty? TextSize { get; init; }
 
-    public StyleProperty<Color>? TextColor { get; init; }
+    public IStyleProperty? TextColor { get; init; }
 
-    public StyleProperty<float>? TextOpacity { get; init; }
+    public IStyleProperty? TextOpacity { get; init; }
 
     public string? TextField { get; init; }
 

@@ -16,11 +16,18 @@ public class LetProperty : IStyleProperty
     
     public IConstValue? GetValue(Dictionary<string, IConstValue?>? values = null)
     {
-        var newValues = values is null ? new Dictionary<string, IConstValue?>() : new Dictionary<string, IConstValue?>(values);
+        if (values is null) return null;
+        // I didn't copy the dictionary here because it causes a performance issue
         foreach (var (key, value) in Variables)
         {
-            newValues[key] = value.GetValue(newValues);
+            values[key] = value.GetValue(values);
         }
-        return Value?.GetValue(newValues);
+        var result = Value?.GetValue(values);
+        foreach (var (key, _) in Variables)
+        {
+            values.Remove(key);
+        }
+
+        return result;
     }
 }

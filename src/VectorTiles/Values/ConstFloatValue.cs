@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.Globalization;
 
 namespace VectorTiles.Values;
@@ -100,6 +101,26 @@ public readonly struct ConstFloatValue : IConstValue
     public override string ToString()
     {
         return _value.ToString(CultureInfo.InvariantCulture);
+    }
+    
+    public int ToInt()
+    {
+        return (int)_value;
+    }
+    
+    public float ToFloat()
+    {
+        return _value;
+    }
+    
+    public bool ToBool()
+    {
+        return Math.Abs(_value) > 0.01;
+    }
+    
+    public Color ToColor()
+    {
+        return Color.FromArgb((int)_value);
     }
 
     public static implicit operator float(ConstFloatValue value)

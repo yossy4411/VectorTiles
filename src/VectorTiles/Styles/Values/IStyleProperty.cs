@@ -10,37 +10,3 @@ public interface IStyleProperty
 {
     public IConstValue? GetValue(Dictionary<string, IConstValue?>? values = null);
 }
-
-/// <summary>
-///     A wrapper class for a style property
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public class StyleProperty<T>
-{
-    public StyleProperty(IStyleProperty property)
-    {
-        Property = property;
-    }
-
-    public IStyleProperty Property { get; init; }
-
-    public T? GetValue(Dictionary<string, IConstValue?>? values = null)
-    {
-        var value = Property.GetValue(values);
-        if (value is not null) return (T)Convert.ChangeType(value.Value, typeof(T));
-        return default;
-    }
-
-    public override string? ToString()
-    {
-        return Property.ToString();
-    }
-}
-
-public static class StylePropertyExtensions
-{
-    public static StyleProperty<T> Wrap<T>(this IStyleProperty property)
-    {
-        return new StyleProperty<T>(property);
-    }
-}

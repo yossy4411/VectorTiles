@@ -186,7 +186,7 @@ public static class MapboxStyle
             case "fill":
             {
                 var fillColorToken = paintToken!["fill-color"];
-                var fillColor = ParseProperty(fillColorToken).Wrap<Color>();
+                var fillColor = ParseProperty(fillColorToken);
                 return new VectorFillStyleLayer(source, vMapFilter)
                 {
                     MinZoom = minZoom,
@@ -198,9 +198,9 @@ public static class MapboxStyle
             case "line":
             {
                 var lineColorToken = paintToken!["line-color"];
-                var lineColor = ParseProperty(lineColorToken).Wrap<Color>();
+                var lineColor = ParseProperty(lineColorToken);
                 var lineWidthToken = paintToken["line-width"];
-                var lineWidth = ParseProperty(lineWidthToken).Wrap<float>();
+                var lineWidth = ParseProperty(lineWidthToken);
                 var dashToken = paintToken["line-dasharray"];
                 var dashToken1 = dashToken?[0];
                 // {"line-dasharray": ["literal", [1, 2]]} or {"line-dasharray": [1, 2]} <- What's the difference?
@@ -223,15 +223,15 @@ public static class MapboxStyle
             case "symbol":
             {
                 var layoutToken = jToken["layout"];
-                var textSize = ParseProperty(layoutToken?["text-size"]).Wrap<float>();
-                var textColor = ParseProperty(jToken["paint"]?["text-color"]).Wrap<Color>();
+                var textSize = ParseProperty(layoutToken?["text-size"]);
+                var textColor = ParseProperty(jToken["paint"]?["text-color"]);
                 var fieldToken = layoutToken?["text-field"];
                 var field = fieldToken is JArray
                     ? fieldToken[1]?.ToObject<string>()
                     : fieldToken?.ToObject<string>()?.Replace("{", "").Replace("}", "");
                 var imageToken = layoutToken?["icon-image"];
                 var iconImage = imageToken?.Type == JTokenType.String ? imageToken.ToObject<string>() : null;
-                var iconSize = ParseProperty(layoutToken?["icon-size"]).Wrap<float>();
+                var iconSize = ParseProperty(layoutToken?["icon-size"]);
                 return new VectorSymbolStyleLayer(source, vMapFilter)
                 {
                     TextField = field,
@@ -247,7 +247,7 @@ public static class MapboxStyle
             case "background":
             {
                 var backgroundColorToken = paintToken!["background-color"];
-                var backgroundColor = ParseProperty(backgroundColorToken).Wrap<Color>();
+                var backgroundColor = ParseProperty(backgroundColorToken);
                 return new VectorBackgroundStyleLayer
                 {
                     MinZoom = minZoom,

@@ -95,6 +95,26 @@ public readonly struct ConstColorValue : IConstValue
     {
         return _value.ToString();
     }
+    
+    public int ToInt()
+    {
+        return _value.ToArgb();
+    }
+    
+    public float ToFloat()
+    {
+        return _value.ToArgb();
+    }
+    
+    public bool ToBool()
+    {
+        return _value.ToArgb() != 0;
+    }
+    
+    public Color ToColor()
+    {
+        return _value;
+    }
 
     public static implicit operator Color(ConstColorValue value)
     {

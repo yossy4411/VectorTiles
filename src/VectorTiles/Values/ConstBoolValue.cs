@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 
 namespace VectorTiles.Values;
 
@@ -84,7 +85,27 @@ public readonly struct ConstBoolValue : IConstValue
     {
         return _value.ToString();
     }
-
+    
+    public int ToInt()
+    {
+        return _value ? 1 : 0;
+    }
+    
+    public float ToFloat()
+    {
+        return _value ? 1 : 0;
+    }
+    
+    public bool ToBool()
+    {
+        return _value;
+    }
+    
+    public Color ToColor()
+    {
+        return _value ? Color.White : Color.Black;
+    }
+    
     public static implicit operator bool(ConstBoolValue value)
     {
         return value._value;
