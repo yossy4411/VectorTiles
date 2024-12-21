@@ -18,14 +18,11 @@
     
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Okayu.VectorTiles.Core" Version="0.2.0" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\VectorTiles\VectorTiles.csproj" />
     </ItemGroup>
     
 </Project>
