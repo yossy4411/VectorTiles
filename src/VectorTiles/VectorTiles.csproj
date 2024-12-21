@@ -4,6 +4,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+        <Version>0.1.0</Version>
+        <PackageId>Okayu.VectorTiles.Core</PackageId>
+        <Copyright>Copyright (c) 2024 Okayu Group</Copyright>
+        <RepositoryUrl>https://github.com/yossy4411/VectorTiles</RepositoryUrl>
+        <RepositoryType>GitHub</RepositoryType>
+        <Authors>yossy4411</Authors>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Description>Core library for Okayu.VectorTiles</Description>
     </PropertyGroup>
 
 
